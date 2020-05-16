@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Rectangle2D?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+
+<HBox xmlns:fx="http://javafx.com/fxml/1" fillHeight="true" BorderPane.alignment="CENTER"
+      xmlns="http://javafx.com/javafx/8.0.121"
+      fx:controller="org.inPainting.controller.CustomLearningGuiControllerImpl">
+    <TitledPane text="Output Image" prefWidth="600" prefHeight="600" collapsible="false">
+        <ImageView fx:id="outputImageView" scaleX="2.5" scaleY="2.5"/>
+    </TitledPane>
+
+    <TitledPane text="Real Image" prefWidth="600" prefHeight="600" collapsible="false">
+        <ImageView fx:id="realImageView" scaleX="2.5" scaleY="2.5"/>
+    </TitledPane>
+</HBox>

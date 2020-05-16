@@ -1,0 +1,50 @@
+buildscript {
+    ext {
+        dl4j_use_cuda = false
+        dl4j_version = "1.0.0-beta5"
+        springBootVersion = '2.0.1.RELEASE'
+        cuda_version = "10.0"
+    }
+
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+group 'org.pixelRemover'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter")
+    implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation("org.springframework.boot:spring-boot-starter-logging")
+
+    implementation group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+    implementation group: 'org.openjfx', name: 'javafx', version: '11', ext: 'pom'
+
+    implementation "org.deeplearning4j:deeplearning4j-core:${dl4j_version}"
+    
+    if (dl4j_use_cuda) {
+        //implementation 'org.bytedeco.javacpp-presets:cuda:10.0-7.4-1.4.4:windows-x86_64-redist'
+        implementation "org.deeplearning4j:deeplearning4j-cuda-${cuda_version}:${dl4j_version}"
+        implementation "org.nd4j:nd4j-cuda-${cuda_version}:${dl4j_version}"
+        implementation "org.nd4j:nd4j-cuda-${cuda_version}-platform:${dl4j_version}"
+    } else {
+        implementation "org.nd4j:nd4j-native-platform:${dl4j_version}"
+    }
+    implementation "org.deeplearning4j:arbiter-ui_2.11:${dl4j_version}"
+    implementation group: 'org.datavec', name: 'datavec-data-codec', version: "${dl4j_version}"
+}
