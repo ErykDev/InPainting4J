@@ -4,8 +4,8 @@
 * Project is based on [DL4J-gans](https://github.com/wmeddie/dl4j-gans)
 * and UI from  [better-coding-dl4j-tutorial](https://gitlab.com/better-coding.com/public/dl4j-tutorial.git)
 
-# U-Net model as generator
-# Alex-Net as discriminator
+## U-Net model as generator
+## Alex-Net as discriminator
 
 ![Input Image](https://i.ibb.co/TvstBg1/input5.png)
 ![Output Image](https://i.ibb.co/qkGnQJs/image0.gif)
