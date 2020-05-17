@@ -5,6 +5,7 @@ import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
+import org.inPainting.nn.ImageDataSetIterator;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.factory.Nd4j;
@@ -120,7 +121,7 @@ public final class ImageUtils {
         return fArray;
     }
 
-    public static MultiDataSet[] prepareData(){
+    public static ImageDataSetIterator prepareData(){
         MultiDataSet[] res = new MultiDataSet[new File(ImageUtils.class.getResource("/data/256/inputs/").getFile()).listFiles().length/2];
 
         for (int i = 1; i < res.length + 1; i++) {
@@ -134,7 +135,7 @@ public final class ImageUtils {
                 e.printStackTrace();
             }
         }
-        return res;
+        return new ImageDataSetIterator(res);
     }
 
 
