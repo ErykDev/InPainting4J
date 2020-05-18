@@ -44,6 +44,9 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
     @Override
     public void onTrainLoop(long loopNo,boolean t) {
+        if (!trainDataSet.hasNext())
+            trainDataSet.reset();
+
         gan.fit(trainDataSet.next(), t);
     }
 
