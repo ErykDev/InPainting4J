@@ -20,7 +20,7 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
     public ImageDataSetIterator(int IterationsPerPicture, MultiDataSet[] multiDataSets){
         this._iterationsPerPicture = IterationsPerPicture;
         this._multiDataSets = multiDataSets;
-        this._maxSize = (multiDataSets.length - 1) * IterationsPerPicture;
+        this._maxSize = (multiDataSets.length) * IterationsPerPicture;
         this._r = new Random();
 
         this.shuffle();
@@ -28,7 +28,7 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
 
     public ImageDataSetIterator(MultiDataSet[] multiDataSets){
         this._multiDataSets = multiDataSets;
-        this._maxSize = (multiDataSets.length - 1) * _iterationsPerPicture;
+        this._maxSize = (multiDataSets.length) * _iterationsPerPicture;
         this._r = new Random();
 
         this.shuffle();
@@ -36,7 +36,7 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
 
     public ImageDataSetIterator(MultiDataSet[] multiDataSets, int seed){
         this._multiDataSets = multiDataSets;
-        this._maxSize = (multiDataSets.length - 1) * _iterationsPerPicture;
+        this._maxSize = (multiDataSets.length) * _iterationsPerPicture;
         this._r = new Random(seed);
 
         this.shuffle();
