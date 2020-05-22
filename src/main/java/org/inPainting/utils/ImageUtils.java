@@ -15,7 +15,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
 public final class ImageUtils {
-    private static final int[] _NetInputShape = {1, 5, 256, 256};
+    private static final int[] _NetInputShape = {1, 4, 256, 256};
 
     private ImageUtils() {
         // This is intentionally empty
@@ -68,12 +68,12 @@ public final class ImageUtils {
                 double fCr = scaleColor(inputColor.getRed());
                 double fCg = scaleColor(inputColor.getGreen());
                 double fCb = scaleColor(inputColor.getBlue());
-                double fCA = scaleColor(inputColor.getOpacity());
+                //double fCA = scaleColor(inputColor.getOpacity());
 
                 fArray.putScalar(new int[]{0,0,y,x},fCr);
                 fArray.putScalar(new int[]{0,1,y,x},fCg);
                 fArray.putScalar(new int[]{0,2,y,x},fCb);
-                fArray.putScalar(new int[]{0,3,y,x},fCA);
+                //fArray.putScalar(new int[]{0,3,y,x},fCA);
             }
         }
         return fArray;
@@ -106,7 +106,7 @@ public final class ImageUtils {
                 double fCr = scaleColor(inputColor.getRed());
                 double fCg = scaleColor(inputColor.getGreen());
                 double fCb = scaleColor(inputColor.getBlue());
-                double fCA = scaleColor(inputColor.getOpacity());
+                //double fCA = scaleColor(inputColor.getOpacity());
 
                 double mB = scaleColor(inputMaskColor.getBrightness());
 
@@ -115,7 +115,7 @@ public final class ImageUtils {
                 fArray.putScalar(new int[]{0,1,y,x},fCr);
                 fArray.putScalar(new int[]{0,2,y,x},fCg);
                 fArray.putScalar(new int[]{0,3,y,x},fCb);
-                fArray.putScalar(new int[]{0,4,y,x},fCA);
+                //fArray.putScalar(new int[]{0,4,y,x},fCA);
             }
         }
         return fArray;

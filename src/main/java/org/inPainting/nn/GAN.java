@@ -33,7 +33,7 @@ public class GAN {
     public static final double LEARNING_RATE = 2E-4;
     public static final double LEARNING_BETA1 = 5E-1;
     public static final double LEARNING_LAMBDA = 10E+1;
-    private static final int[] _NetInputShape = {1,5,256,256};
+    private static final int[] _NetInputShape = {1,4,256,256};
 
     public interface DiscriminatorProvider {
         ComputationGraph provide(IUpdater updater);
@@ -176,8 +176,8 @@ public class GAN {
     public static ComputationGraph NET(IUpdater updater) {
 
         double nonZeroBias = 1;
-        int inputChannels = 5;
-        int outputChannels = 4;
+        int inputChannels = 4;
+        int outputChannels = 3;
         int[] doubleKernel = {2,2};
         int[] doubleStride = {2,2};
         int[] noStride = {1,1};
@@ -287,17 +287,30 @@ public class GAN {
                 .addVertex("GENmerge4",
                         new MergeVertex(),
                         "Input","GENRV4")
+
                 //Decoder 256x256x4
                 .addLayer("GENCNN8",
                         convInitSame(
                                 (inputChannels*2),
-                                (outputChannels),
+                                (inputChannels),
                                 Activation.LEAKYRELU),
                         "GENmerge4")
+
+                //Merging Decoder with Input
+                .addVertex("GENmerge5",
+                        new MergeVertex(),
+                        "Input","GENCNN8")
+                //Decoder 256x256x4
+                .addLayer("GENCNN9",
+                        convInitSame(
+                                (inputChannels*2),
+                                (outputChannels),
+                                Activation.LEAKYRELU),
+                        "GENmerge5")
                 //Decoder Loss
                 .addLayer("GENCNNLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
                         .activation(Activation.SIGMOID)
-                        .build(),"GENCNN8")
+                        .build(),"GENCNN9")
 
 
                 //Discriminator
@@ -306,7 +319,7 @@ public class GAN {
                         .convolutionMode(ConvolutionMode.Truncate)
                         .nIn(outputChannels)
                         .nOut(96)
-                        .build(),"GENCNN8")
+                        .build(),"GENCNN9")
                 .addLayer("DISLRN1", new LocalResponseNormalization.Builder().build(),"DISCNN1")
                 .addLayer("DISSL1", new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
                         .kernelSize(3,3)

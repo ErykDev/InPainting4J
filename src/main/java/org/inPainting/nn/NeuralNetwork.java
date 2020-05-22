@@ -26,8 +26,10 @@ public class NeuralNetwork {
     }
 
     public static ComputationGraph getGenerator() {
-        int inputChannels = 5;
-        int outputChannels = 4;
+
+        int[] _NetInputShape = {1,4,256,256};
+        int inputChannels = 4;
+        int outputChannels = 3;
         int[] doubleKernel = {2,2};
         int[] doubleStride = {2,2};
         int[] noStride = {1,1};
@@ -78,9 +80,10 @@ public class NeuralNetwork {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "GENCNN3")
-
                 //Decoder Vertex 16x16x1280 -> 32x32x320x1
-                .addVertex("GENRV1", new ReshapeVertex(1,320,32,32),"GENCNN4")
+                .addVertex("GENRV1",
+                        new ReshapeVertex(_NetInputShape[0],_NetInputShape[1]*64,_NetInputShape[2]/8,_NetInputShape[3]/8),
+                        "GENCNN4")
                 //Merging Decoder with GENCNN1
                 .addVertex("GENmerge1",
                         new MergeVertex(),
@@ -95,7 +98,9 @@ public class NeuralNetwork {
                                 Activation.LEAKYRELU),
                         "GENmerge1")
                 //Decoder Vertex 32x32x320x1 -> 64x64x80x1
-                .addVertex("GENRV2", new ReshapeVertex(1,80,64,64),"GENCNN5")
+                .addVertex("GENRV2",
+                        new ReshapeVertex(_NetInputShape[0],_NetInputShape[1]*16,_NetInputShape[2]/4,_NetInputShape[3]/4),
+                        "GENCNN5")
                 //Merging Decoder with Input
                 .addVertex("GENmerge2",
                         new MergeVertex(),
@@ -109,8 +114,10 @@ public class NeuralNetwork {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "GENmerge2")
-                //Decoder Vertex 64x64x80 -> 128x128x20
-                .addVertex("GENRV3", new ReshapeVertex(1,20,128,128),"GENCNN6")
+                //Decoder Vertex 64x64x80x1 -> 128x128x20
+                .addVertex("GENRV3",
+                        new ReshapeVertex(_NetInputShape[0],_NetInputShape[1]*4,_NetInputShape[2]/2,_NetInputShape[3]/2),
+                        "GENCNN6")
                 //Merging Decoder with Input
                 .addVertex("GENmerge3",
                         new MergeVertex(),
@@ -124,32 +131,47 @@ public class NeuralNetwork {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "GENmerge3")
-                //Decoder Vertex 128x128x20 -> 256x256x5
-                .addVertex("GENRV4", new ReshapeVertex(1,5,256,256),"GENCNN7")
+                //Decoder Vertex 128x128x20x1 -> 256x256x5x1
+                .addVertex("GENRV4",
+                        new ReshapeVertex(_NetInputShape[0],_NetInputShape[1],_NetInputShape[2],_NetInputShape[3]),
+                        "GENCNN7")
                 //Merging Decoder with Input
                 .addVertex("GENmerge4",
                         new MergeVertex(),
                         "Input","GENRV4")
+
                 //Decoder 256x256x4
                 .addLayer("GENCNN8",
                         convInitSame(
                                 (inputChannels*2),
-                                (outputChannels),
+                                (inputChannels),
                                 Activation.LEAKYRELU),
                         "GENmerge4")
-                //Decoder Loss
-                .addLayer("GENCNNloss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
-                        .activation(Activation.SIGMOID)
-                        .build(),"GENCNN8")
 
-                .setOutputs("GENCNNloss")
+                //Merging Decoder with Input
+                .addVertex("GENmerge5",
+                        new MergeVertex(),
+                        "Input","GENCNN8")
+                //Decoder 256x256x4
+                .addLayer("GENCNN9",
+                        convInitSame(
+                                (inputChannels*2),
+                                (outputChannels),
+                                Activation.LEAKYRELU),
+                        "GENmerge5")
+                //Decoder Loss
+                .addLayer("GENCNNLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
+                        .activation(Activation.SIGMOID)
+                        .build(),"GENCNN9")
+
+                .setOutputs("GENCNNLoss")
                 .build()
         );
     }
 
     public static ComputationGraph getDiscriminator() {
         int seed = 123;
-        int channels = 4;
+        int channels = 3;
         double nonZeroBias = 1;
         return new ComputationGraph(new NeuralNetConfiguration.Builder()
                 .weightInit(new NormalDistribution(0.0,1E-1))
