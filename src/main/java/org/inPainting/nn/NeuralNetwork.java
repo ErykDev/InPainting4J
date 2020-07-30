@@ -5,10 +5,11 @@ import org.deeplearning4j.nn.conf.GradientNormalization;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.distribution.NormalDistribution;
 import org.deeplearning4j.nn.conf.graph.MergeVertex;
-import org.deeplearning4j.nn.conf.graph.ReshapeVertex;
 import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.*;
 import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.linalg.learning.config.Nesterovs;
@@ -17,9 +18,26 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import java.io.File;
 import java.io.IOException;
 
-import static org.inPainting.utils.LayerUtils.*;
+import static org.inPainting.utils.LayerUtils.convInitSame;
+import static org.inPainting.utils.LayerUtils.reshape;
 
 public class NeuralNetwork {
+
+    public static void saveNetworkGraph(ComputationGraph neuralNetwork, File file) {
+        try {
+            ModelSerializer.writeModel(neuralNetwork, file, true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void saveNetworkGraph(MultiLayerNetwork neuralNetwork, File file) {
+        try {
+            ModelSerializer.writeModel(neuralNetwork, file, true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static ComputationGraph loadNetworkGraph(File file) throws IOException {
         return ComputationGraph.load(file, true);
@@ -28,6 +46,8 @@ public class NeuralNetwork {
     public static ComputationGraph getGenerator() {
 
         int[] _NetInputShape = {1,4,256,256};
+
+        double nonZeroBias = 1;
         int inputChannels = 4;
         int outputChannels = 3;
         int[] doubleKernel = {2,2};
@@ -40,20 +60,20 @@ public class NeuralNetwork {
                 .graphBuilder()
                 .allowDisconnected(true)
                 .addInputs("Input")
-                //m + rgb 256x256x5x1
-                .setInputTypes(InputType.convolutional(256,256,5))
+                //m + rgb 256x256x4x1
+                .setInputTypes(InputType.convolutional(_NetInputShape[3],_NetInputShape[2],_NetInputShape[1]))
 
                 //Generator
-                //Encoder 256x256x5 -> 128x128x20
+                //Encoder 256x256x4 -> 128x128x16
                 .addLayer("GENCNN1",
                         convInitSame(
-                                (inputChannels),
-                                (inputChannels*4),
+                                ((inputChannels)),
+                                ((inputChannels*4)),
                                 doubleStride,
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "Input")
-                //Encoder 128x128x20 -> 64x64x80
+                //Encoder 128x128x16 -> 64x64x64
                 .addLayer("GENCNN2",
                         convInitSame(
                                 (inputChannels*4),
@@ -62,7 +82,7 @@ public class NeuralNetwork {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "GENCNN1")
-                //Encoder 64x64x80 -> 32x32x320
+                //Encoder 64x64x64 -> 32x32x256
                 .addLayer("GENCNN3",
                         convInitSame(
                                 (inputChannels*16),
@@ -71,7 +91,7 @@ public class NeuralNetwork {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "GENCNN2")
-                //Encoder 32x32x320 -> 16x16x1280
+                //Encoder 32x32x256 -> 16x16x1024
                 .addLayer("GENCNN4",
                         convInitSame(
                                 (inputChannels*64),
@@ -80,88 +100,112 @@ public class NeuralNetwork {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "GENCNN3")
-                //Decoder Vertex 16x16x1280 -> 32x32x320x1
-                .addVertex("GENRV1",
-                        new ReshapeVertex(_NetInputShape[0],_NetInputShape[1]*64,_NetInputShape[2]/8,_NetInputShape[3]/8),
+                //Encoder 16x16x1024 -> 8x8x4096
+                .addLayer("GENCNN5",
+                        convInitSame(
+                                (inputChannels*256),
+                                (inputChannels*1024),
+                                doubleStride,
+                                doubleKernel,
+                                Activation.LEAKYRELU),
                         "GENCNN4")
+                //Decoder Vertex 8x8x4096 -> 16x16x1024
+                .addVertex("GENRV1",
+                        reshape(_NetInputShape[0],_NetInputShape[1]*256,_NetInputShape[2]/16,_NetInputShape[3]/16),
+                        "GENCNN5")
                 //Merging Decoder with GENCNN1
                 .addVertex("GENmerge1",
                         new MergeVertex(),
-                        "GENCNN3","GENRV1")
+                        "GENCNN4","GENRV1")
+                //Decoder 16x16x1280
+                .addLayer("GENCNN6",
+                        convInitSame(
+                                (inputChannels*256*2),
+                                (inputChannels*256),
+                                noStride,
+                                doubleKernel,
+                                Activation.LEAKYRELU),
+                        "GENmerge1")
+                //Decoder Vertex 16x16x1024 -> 32x32x256x1
+                .addVertex("GENRV2",
+                        reshape(_NetInputShape[0],_NetInputShape[1]*64,_NetInputShape[2]/8,_NetInputShape[3]/8),
+                        "GENCNN6")
+                //Merging Decoder with Input
+                .addVertex("GENmerge2",
+                        new MergeVertex(),
+                        "GENCNN3","GENRV2")
                 //Decoder 32x32x256
-                .addLayer("GENCNN5",
+                .addLayer("GENCNN7",
                         convInitSame(
                                 (inputChannels*64*2),
                                 (inputChannels*64),
                                 noStride,
                                 doubleKernel,
                                 Activation.LEAKYRELU),
-                        "GENmerge1")
-                //Decoder Vertex 32x32x320x1 -> 64x64x80x1
-                .addVertex("GENRV2",
-                        new ReshapeVertex(_NetInputShape[0],_NetInputShape[1]*16,_NetInputShape[2]/4,_NetInputShape[3]/4),
-                        "GENCNN5")
+                        "GENmerge2")
+                //Decoder Vertex 32x32x256 -> 64x64x64
+                .addVertex("GENRV3",
+                        reshape(_NetInputShape[0],_NetInputShape[1]*16,_NetInputShape[2]/4,_NetInputShape[3]/4),
+                        "GENCNN7")
                 //Merging Decoder with Input
-                .addVertex("GENmerge2",
+                .addVertex("GENmerge3",
                         new MergeVertex(),
-                        "GENCNN2","GENRV2")
-                //Decoder 64x64x80
-                .addLayer("GENCNN6",
+                        "GENCNN2","GENRV3")
+                //Decoder 64x64x64
+                .addLayer("GENCNN8",
                         convInitSame(
                                 (inputChannels*16*2),
                                 (inputChannels*16),
                                 noStride,
                                 doubleKernel,
                                 Activation.LEAKYRELU),
-                        "GENmerge2")
-                //Decoder Vertex 64x64x80x1 -> 128x128x20
-                .addVertex("GENRV3",
-                        new ReshapeVertex(_NetInputShape[0],_NetInputShape[1]*4,_NetInputShape[2]/2,_NetInputShape[3]/2),
-                        "GENCNN6")
-                //Merging Decoder with Input
-                .addVertex("GENmerge3",
-                        new MergeVertex(),
-                        "GENCNN1","GENRV3")
-                //Decoder 128x128x20
-                .addLayer("GENCNN7",
-                        convInitSame(
-                                (inputChannels*4*2),
-                                (inputChannels*4),
-                                noStride,
-                                doubleKernel,
-                                Activation.LEAKYRELU),
                         "GENmerge3")
-                //Decoder Vertex 128x128x20x1 -> 256x256x5x1
+                //Decoder Vertex 64x64x64x1 -> 128x128x*16
                 .addVertex("GENRV4",
-                        new ReshapeVertex(_NetInputShape[0],_NetInputShape[1],_NetInputShape[2],_NetInputShape[3]),
-                        "GENCNN7")
+                        reshape(_NetInputShape[0],_NetInputShape[1]*4,_NetInputShape[2]/2,_NetInputShape[3]/2),
+                        "GENCNN8")
+
                 //Merging Decoder with Input
                 .addVertex("GENmerge4",
                         new MergeVertex(),
-                        "Input","GENRV4")
-
+                        "GENCNN1","GENRV4")
+                //Decoder 128x128x16x1
+                .addLayer("GENCNN9",
+                        convInitSame(
+                                (inputChannels*4*2),
+                                (inputChannels*4),
+                                Activation.LEAKYRELU),
+                        "GENmerge4")
+                //Decoder Vertex 128x128x*16 -> 256x256x4
+                .addVertex("GENRV5",
+                        reshape(_NetInputShape[0],_NetInputShape[1],_NetInputShape[2],_NetInputShape[3]),
+                        "GENCNN9")
+                //Merging Decoder with Input
+                .addVertex("GENmerge5",
+                        new MergeVertex(),
+                        "Input","GENRV5")
                 //Decoder 256x256x4
-                .addLayer("GENCNN8",
+                .addLayer("GENCNN10",
                         convInitSame(
                                 (inputChannels*2),
                                 (outputChannels),
                                 Activation.LEAKYRELU),
-                        "GENmerge4")
-
+                        "GENmerge5")
                 //Decoder Loss
                 .addLayer("GENCNNLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
                         .activation(Activation.SIGMOID)
-                        .build(),"GENCNN8")
-
+                        .build(),"GENCNN10")
                 .setOutputs("GENCNNLoss")
-                .build()
-        );
+                .build());
+
     }
 
     public static ComputationGraph getDiscriminator() {
         int seed = 123;
         int channels = 3;
         double nonZeroBias = 1;
+        InputType rgbImage = InputType.convolutional(256,256,3);
+
         return new ComputationGraph(new NeuralNetConfiguration.Builder()
                 .weightInit(new NormalDistribution(0.0,1E-1))
                 .updater(new Nesterovs(1e-2,9E-1))
@@ -175,7 +219,7 @@ public class NeuralNetwork {
 
                 .addInputs("Input")
                 //rgb 256x256
-                .setInputTypes(InputType.convolutional(256,256,3))
+                .setInputTypes(rgbImage)
 
                 .addLayer("DISCNN1", new ConvolutionLayer.Builder(new int[]{11,11}, new int[]{4, 4})
                         .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
@@ -221,23 +265,23 @@ public class NeuralNetwork {
                         .build(),"DISCNN5")
                 .addLayer("DISFFN1", new DenseLayer.Builder()
                         .weightInit(new NormalDistribution(0, 5E-3))
-                        .nOut(256)
+                        .nOut(512)
                         .biasInit(nonZeroBias)
                         .build(),"DISSL3")
                 .addLayer("DISFFN2", new DenseLayer.Builder()
-                        .nOut(256)
+                        .nOut(512)
                         .weightInit(new NormalDistribution(0, 5E-3))
                         .biasInit(nonZeroBias)
                         .dropOut(0.5)
                         .build(),"DISFFN1")
-                .addLayer("DISFFOUT", new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                .addLayer("DISLoss", new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
                         .nOut(2)
                         .activation(Activation.SOFTMAX)
-                        .weightInit(new NormalDistribution(0, 0.005))
+                        .weightInit(new NormalDistribution(0, 5E-3))
                         .biasInit(0.1)
                         .build(),"DISFFN2")
 
-                .setOutputs("DISFFOUT")
+                .setOutputs("DISLoss")
                 .build()
         );
     }

@@ -6,7 +6,6 @@ import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.*;
 import org.deeplearning4j.nn.conf.distribution.NormalDistribution;
 import org.deeplearning4j.nn.conf.graph.MergeVertex;
-import org.deeplearning4j.nn.conf.graph.ReshapeVertex;
 import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.*;
 import org.deeplearning4j.nn.graph.ComputationGraph;
@@ -17,9 +16,11 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
+import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.*;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
+import org.inPainting.nn.res.NetResult;
 import org.inPainting.utils.ImageUtils;
 
 import java.util.List;
@@ -55,6 +56,7 @@ public class GAN {
     protected CacheMode cacheMode;
     protected long seed;
 
+
     public GAN(Builder builder) {
         this.generatorSupplier = builder.generator;
         this.discriminatorSupplier = builder.discriminator;
@@ -76,20 +78,26 @@ public class GAN {
         this.discriminator = discriminator;
     }
 
-    public WritableImage getOutput(Image image, Image mask) {
+    public WritableImage drawOutput(Image image, Image mask) {
         assert ((image.getHeight() == mask.getHeight())&&(image.getWidth() == mask.getWidth()));
         return ImageUtils.drawImage(gan.output(ImageUtils.convertToRank4INDArrayInput(image, mask))[1], (int)image.getWidth(), (int)image.getHeight());
     }
 
-    public WritableImage getOutput(INDArray PictureWithMask, int width, int height) {
+    public WritableImage drawOutput(INDArray PictureWithMask, int width, int height) {
         return ImageUtils.drawImage(gan.output(PictureWithMask)[1], width, height);
+    }
+
+    public NetResult getOutput(INDArray PictureWithMask) {
+        return new NetResult(gan.output(PictureWithMask));
     }
 
     public ComputationGraph getDiscriminator() {
         return discriminator;
     }
 
-    public ComputationGraph getNetwork(){ return gan; }
+    public ComputationGraph getNetwork(){
+        return gan;
+    }
 
     public Evaluation evaluateGan(DataSetIterator data) {
         return gan.evaluate(data);
@@ -107,26 +115,24 @@ public class GAN {
         gan.setListeners(listeners);
     }
 
-    /*
-    public void fit(DataSetIterator realData, int numEpochs) {
+    public void fit(MultiDataSetIterator realData, int numEpochs) {
         for (int i = 0; i < numEpochs; i++) {
             while (realData.hasNext()) {
-                // Get real images as features
-                DataSet next = realData.next();
+                MultiDataSet next = (MultiDataSet) realData.next();
                 fit(next,true);
             }
             realData.reset();
         }
     }
-     */
 
     public void fit(MultiDataSet next, boolean trainDiscriminator) {
         INDArray realImage = next.getLabels()[0];
-
+        /*for (int i = 0; i < discriminator.getLayers().length; i++) {
+            if (discriminatorLearningRates[i] != null) {
+                discriminator.setLearningRate(i, discriminatorLearningRates[i]);
+            }
+        }*/
         if (trainDiscriminator) {
-            // Generate a new set of adversarial examples and try to mislead the discriminator.
-            // by labeling the fake images as real images we reward the generator when it's output
-            // tricks the discriminator.
             INDArray[] ganOutput = gan.output(next.getFeatures());
 
             //Pix2PixGAN output
@@ -140,20 +146,31 @@ public class GAN {
             discriminator.fit(fakeSet);
         }
 
-        // Update the discriminator in the GAN network
+        // Update the discriminator in the Pix2PixGAN network
         updateGanWithDiscriminator();
 
+        // Generate a new set of adversarial examples and try to mislead the discriminator.
+        // by labeling the fake images as real images we reward the generator when it's output
+        // tricks the discriminator.
+        //INDArray adversarialExamples = Nd4j.rand(new int[]{batchSize, latentDim});
+        //INDArray misleadingLabels = Nd4j.zeros(batchSize, 1);
+
+        //DataSet adversarialSet = new DataSet(next.getFeatures(), realone);
+        // Set learning rate of discriminator part of gan to zero.
+        /*for (int i = generator.getLayers().length; i < gan.getLayers().length; i++) {
+            gan.setLearningRate(i, 0.0);
+        }*/
 
         // Fit the Pix2PixGAN on the adversarial set, trying to fool the discriminator by generating
         // better fake images.
         gan.fit(new MultiDataSet(
-                    new INDArray[]{
-                            next.getFeatures()[0]
-                    },
-                    new INDArray[]{
-                            Outputs.REAL(),
-                            realImage
-                    })
+                new INDArray[]{
+                        next.getFeatures()[0]
+                },
+                new INDArray[]{
+                        Outputs.REAL(),
+                        realImage
+                })
         );
     }
 
@@ -188,20 +205,24 @@ public class GAN {
                 .graphBuilder()
                 .allowDisconnected(true)
                 .addInputs("Input")
-                //m + rgba 256x256x5x1
-                .setInputTypes(InputType.convolutional(_NetInputShape[3],_NetInputShape[2],_NetInputShape[1]))
+                //m + rgb 256x256x4x1
+                .setInputTypes(InputType.convolutional(
+                        _NetInputShape[3],
+                        _NetInputShape[2],
+                        _NetInputShape[1]
+                ))
 
                 //Generator
-                //Encoder 256x256x5 -> 128x128x20
+                //Encoder 256x256x4 -> 128x128x16
                 .addLayer("GENCNN1",
                         convInitSame(
-                                (inputChannels),
-                                (inputChannels*4),
+                                ((inputChannels)),
+                                ((inputChannels*4)),
                                 doubleStride,
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "Input")
-                //Encoder 128x128x20 -> 64x64x80
+                //Encoder 128x128x16 -> 64x64x64
                 .addLayer("GENCNN2",
                         convInitSame(
                                 (inputChannels*4),
@@ -210,7 +231,7 @@ public class GAN {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "GENCNN1")
-                //Encoder 64x64x80 -> 32x32x320
+                //Encoder 64x64x64 -> 32x32x256
                 .addLayer("GENCNN3",
                         convInitSame(
                                 (inputChannels*16),
@@ -219,7 +240,7 @@ public class GAN {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "GENCNN2")
-                //Encoder 32x32x320 -> 16x16x1280
+                //Encoder 32x32x256 -> 16x16x1024
                 .addLayer("GENCNN4",
                         convInitSame(
                                 (inputChannels*64),
@@ -228,78 +249,100 @@ public class GAN {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "GENCNN3")
-                //Decoder Vertex 16x16x1280 -> 32x32x320x1
-                .addVertex("GENRV1",
-                        new ReshapeVertex(_NetInputShape[0],_NetInputShape[1]*64,_NetInputShape[2]/8,_NetInputShape[3]/8),
+                //Encoder 16x16x1024 -> 8x8x4096
+                .addLayer("GENCNN5",
+                        convInitSame(
+                                (inputChannels*256),
+                                (inputChannels*1024),
+                                doubleStride,
+                                doubleKernel,
+                                Activation.LEAKYRELU),
                         "GENCNN4")
+                //Decoder Vertex 8x8x4096 -> 16x16x1024
+                .addVertex("GENRV1",
+                        reshape(_NetInputShape[0],_NetInputShape[1]*256,_NetInputShape[2]/16,_NetInputShape[3]/16),
+                        "GENCNN5")
                 //Merging Decoder with GENCNN1
                 .addVertex("GENmerge1",
                         new MergeVertex(),
-                        "GENCNN3","GENRV1")
+                        "GENCNN4","GENRV1")
+                //Decoder 16x16x1280
+                .addLayer("GENCNN6",
+                        convInitSame(
+                                (inputChannels*256*2),
+                                (inputChannels*256),
+                                noStride,
+                                doubleKernel,
+                                Activation.LEAKYRELU),
+                        "GENmerge1")
+                //Decoder Vertex 16x16x1024 -> 32x32x256x1
+                .addVertex("GENRV2",
+                        reshape(_NetInputShape[0],_NetInputShape[1]*64,_NetInputShape[2]/8,_NetInputShape[3]/8),
+                        "GENCNN6")
+                //Merging Decoder with Input
+                .addVertex("GENmerge2",
+                        new MergeVertex(),
+                        "GENCNN3","GENRV2")
                 //Decoder 32x32x256
-                .addLayer("GENCNN5",
+                .addLayer("GENCNN7",
                         convInitSame(
                                 (inputChannels*64*2),
                                 (inputChannels*64),
                                 noStride,
                                 doubleKernel,
                                 Activation.LEAKYRELU),
-                        "GENmerge1")
-                //Decoder Vertex 32x32x320x1 -> 64x64x80x1
-                .addVertex("GENRV2",
-                        new ReshapeVertex(_NetInputShape[0],_NetInputShape[1]*16,_NetInputShape[2]/4,_NetInputShape[3]/4),
-                        "GENCNN5")
+                        "GENmerge2")
+                //Decoder Vertex 32x32x256 -> 64x64x64
+                .addVertex("GENRV3",
+                        reshape(_NetInputShape[0],_NetInputShape[1]*16,_NetInputShape[2]/4,_NetInputShape[3]/4),
+                        "GENCNN7")
                 //Merging Decoder with Input
-                .addVertex("GENmerge2",
+                .addVertex("GENmerge3",
                         new MergeVertex(),
-                        "GENCNN2","GENRV2")
-                //Decoder 64x64x80
-                .addLayer("GENCNN6",
+                        "GENCNN2","GENRV3")
+                //Decoder 64x64x64
+                .addLayer("GENCNN8",
                         convInitSame(
                                 (inputChannels*16*2),
                                 (inputChannels*16),
                                 noStride,
                                 doubleKernel,
                                 Activation.LEAKYRELU),
-                        "GENmerge2")
-                //Decoder Vertex 64x64x80x1 -> 128x128x20
-                .addVertex("GENRV3",
-                        new ReshapeVertex(_NetInputShape[0],_NetInputShape[1]*4,_NetInputShape[2]/2,_NetInputShape[3]/2),
-                        "GENCNN6")
-                //Merging Decoder with Input
-                .addVertex("GENmerge3",
-                        new MergeVertex(),
-                        "GENCNN1","GENRV3")
-                //Decoder 128x128x20
-                .addLayer("GENCNN7",
-                        convInitSame(
-                                (inputChannels*4*2),
-                                (inputChannels*4),
-                                noStride,
-                                doubleKernel,
-                                Activation.LEAKYRELU),
                         "GENmerge3")
-                //Decoder Vertex 128x128x20x1 -> 256x256x5x1
+                //Decoder Vertex 64x64x64x1 -> 128x128x*16
                 .addVertex("GENRV4",
-                        new ReshapeVertex(_NetInputShape[0],_NetInputShape[1],_NetInputShape[2],_NetInputShape[3]),
-                        "GENCNN7")
+                        reshape(_NetInputShape[0],_NetInputShape[1]*4,_NetInputShape[2]/2,_NetInputShape[3]/2),
+                        "GENCNN8")
                 //Merging Decoder with Input
                 .addVertex("GENmerge4",
                         new MergeVertex(),
-                        "Input","GENRV4")
-
+                        "GENCNN1","GENRV4")
+                //Decoder 128x128x16x1
+                .addLayer("GENCNN9",
+                        convInitSame(
+                                (inputChannels*4*2),
+                                (inputChannels*4),
+                                Activation.LEAKYRELU),
+                        "GENmerge4")
+                //Decoder Vertex 128x128x*16 -> 256x256x4
+                .addVertex("GENRV5",
+                        reshape(_NetInputShape[0],_NetInputShape[1],_NetInputShape[2],_NetInputShape[3]),
+                        "GENCNN9")
+                //Merging Decoder with Input
+                .addVertex("GENmerge5",
+                        new MergeVertex(),
+                        "Input","GENRV5")
                 //Decoder 256x256x4
-                .addLayer("GENCNN8",
+                .addLayer("GENCNN10",
                         convInitSame(
                                 (inputChannels*2),
                                 (outputChannels),
                                 Activation.LEAKYRELU),
-                        "GENmerge4")
-
+                        "GENmerge5")
                 //Decoder Loss
                 .addLayer("GENCNNLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
                         .activation(Activation.SIGMOID)
-                        .build(),"GENCNN8")
+                        .build(),"GENCNN10")
 
                 //Discriminator
                 .addLayer("DISCNN1", new ConvolutionLayer.Builder(new int[]{11,11}, new int[]{4, 4})
@@ -307,7 +350,7 @@ public class GAN {
                         .convolutionMode(ConvolutionMode.Truncate)
                         .nIn(outputChannels)
                         .nOut(96)
-                        .build(),"GENCNN8")
+                        .build(),"GENCNN10")
                 .addLayer("DISLRN1", new LocalResponseNormalization.Builder().build(),"DISCNN1")
                 .addLayer("DISSL1", new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
                         .kernelSize(3,3)
@@ -346,28 +389,28 @@ public class GAN {
                         .build(),"DISCNN5")
                 .addLayer("DISFFN1", new DenseLayer.Builder()
                         .weightInit(new NormalDistribution(0, 5E-3))
-                        .nOut(256)
+                        .nOut(512)
                         .biasInit(nonZeroBias)
                         .build(),"DISSL3")
                 .addLayer("DISFFN2", new DenseLayer.Builder()
-                        .nOut(256)
+                        .nOut(512)
                         .weightInit(new NormalDistribution(0, 5E-3))
                         .biasInit(nonZeroBias)
                         .dropOut(0.5)
                         .build(),"DISFFN1")
-                .addLayer("DISOut", new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                .addLayer("DISLoss", new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
                         .nOut(2)
                         .activation(Activation.SOFTMAX)
                         .weightInit(new NormalDistribution(0, 5E-3))
                         .biasInit(0.1)
                         .build(),"DISFFN2")
 
-                .setOutputs("DISOut","GENCNNLoss") //Discriminator output, Generator loss
+                .setOutputs("DISLoss","GENCNNLoss") //Discriminator output, Generator loss
                 .build());
     }
 
     /**
-     * After the discriminator has been trained, we update the respective parts of the Pix2PixGAN network
+     * After the discriminator has been trained, we update the respective parts of the GAN network
      * as well.
      */
     private void updateGanWithDiscriminator() {
@@ -376,8 +419,9 @@ public class GAN {
             gan.getLayer(i).setParams(discriminator.getLayer(i - genLayerCount).params());
     }
 
+
     /**
-     * Pix2PixGAN builder, used as a starting point for creating a MultiLayerConfiguration or
+     * GAN builder, used as a starting point for creating a MultiLayerConfiguration or
      * ComputationGraphConfiguration.<br>
      */
     public static class Builder implements Cloneable {
@@ -399,7 +443,7 @@ public class GAN {
         }
 
         /**
-         * Set the image discriminator of the Pix2PixGAN.
+         * Set the image discriminator of the GAN.
          *
          * @param discriminator MultilayerNetwork
          * @return Builder
@@ -427,6 +471,7 @@ public class GAN {
             this.optimizationAlgo = optimizationAlgo;
             return this;
         }
+
 
         /**
          * Gradient updater configuration. For example, {@link org.nd4j.linalg.learning.config.Adam}
@@ -493,8 +538,9 @@ public class GAN {
     public static class Outputs {
         public static INDArray REAL(){
             INDArray real_one = Nd4j.zeros(1,2);
-            real_one.putScalar(0, 0);
-            real_one.putScalar(1, 1);
+            for(int i = 0; i<2; i++)
+                real_one.putScalar(i,i);
+
             return real_one;
         }
 
@@ -502,6 +548,7 @@ public class GAN {
             INDArray fake_one = Nd4j.zeros(1,2);
             fake_one.putScalar(0, 1);
             fake_one.putScalar(1, 0);
+
             return fake_one;
         }
     }
