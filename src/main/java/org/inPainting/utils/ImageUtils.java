@@ -16,10 +16,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.Arrays;
-import java.util.Random;
 
 public final class ImageUtils {
     private final static int[] _NetInputShape = {1,4,256,256};

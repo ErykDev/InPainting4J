@@ -32,8 +32,6 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
     private ImageDataSetIterator trainDataSet;
 
-    private Random r = new Random();
-
     @Override
     public void onRefreshGUI() {
 
