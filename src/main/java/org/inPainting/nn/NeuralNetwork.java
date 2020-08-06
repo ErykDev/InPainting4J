@@ -164,28 +164,14 @@ public class NeuralNetwork {
                 .addLayer("GENCNN8",
                         convInitSame(
                                 (inputChannels*2),
-                                (inputChannels),
-                                Activation.LEAKYRELU),
-                        "GENmerge4")
-
-
-                //Merging Decoder with Input
-                .addVertex("GENmerge5",
-                        new MergeVertex(),
-                        "Input","GENCNN8")
-
-                //Decoder 256x256x4
-                .addLayer("GENCNN9",
-                        convInitSame(
-                                (inputChannels*2),
                                 (outputChannels),
                                 Activation.LEAKYRELU),
-                        "GENmerge5")
+                        "GENmerge4")
 
                 //Decoder Loss
                 .addLayer("GENCNNLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
                         .activation(Activation.SIGMOID)
-                        .build(),"GENCNN9")
+                        .build(),"GENCNN8")
                 .setOutputs("GENCNNLoss")
                 .build());
 

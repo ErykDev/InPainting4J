@@ -313,28 +313,15 @@ public class GAN {
                 .addLayer("GENCNN8",
                         convInitSame(
                                 (inputChannels*2),
-                                (inputChannels),
+                                (outputChannels),
                                 Activation.LEAKYRELU),
                         "GENmerge4")
 
 
-                //Merging Decoder with Input
-                .addVertex("GENmerge5",
-                        new MergeVertex(),
-                        "Input","GENCNN8")
-
-                //Decoder 256x256x4
-                .addLayer("GENCNN9",
-                        convInitSame(
-                                (inputChannels*2),
-                                (outputChannels),
-                                Activation.LEAKYRELU),
-                        "GENmerge5")
-
                 //Decoder Loss
                 .addLayer("GENCNNLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
                         .activation(Activation.SIGMOID)
-                        .build(),"GENCNN9")
+                        .build(),"GENCNN8")
 
                 //Discriminator
                 .addLayer("DISCNN1", new ConvolutionLayer.Builder(new int[]{11,11}, new int[]{4, 4})
@@ -342,7 +329,7 @@ public class GAN {
                         .convolutionMode(ConvolutionMode.Truncate)
                         .nIn(outputChannels)
                         .nOut(96)
-                        .build(),"GENCNN9")
+                        .build(),"GENCNN8")
                 .addLayer("DISLRN1", new LocalResponseNormalization.Builder().build(),"DISCNN1")
                 .addLayer("DISSL1", new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
                         .kernelSize(3,3)
