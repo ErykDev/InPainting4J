@@ -93,4 +93,9 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
         this.gan = restoreMultiLayerNetwork;
     }
 
+    @Override
+    public long getDataSize(){
+        return trainDataSet.getSize();
+    }
+
 }

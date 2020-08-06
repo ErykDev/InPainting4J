@@ -3,6 +3,8 @@ package org.inPainting.controller;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -26,7 +28,7 @@ import java.io.IOException;
 public class LearningGuiController {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    private final IntegerProperty counterProperty = new SimpleIntegerProperty();
+    private final IntegerProperty counterProperty = new SimpleIntegerProperty(0);
 
     @Autowired
     UIServerComponent uiServerComponent;
@@ -38,6 +40,9 @@ public class LearningGuiController {
     private Button btnSave;
 
     @FXML
+    private Button btnTest;
+
+    @FXML
     private ToggleButton btnTrain;
 
     @FXML
@@ -45,6 +50,9 @@ public class LearningGuiController {
 
     @FXML
     private CheckBox trainD;
+
+    @FXML
+    private Label counterEpoch;
 
     @Autowired
     private CustomLearningGuiController customLearningGuiController;
@@ -85,8 +93,13 @@ public class LearningGuiController {
         //gan.setGeneratorListeners(new BaseTrainingListener[]{new PerformanceListener(10, true)}); // Already done in UIServer
         gan.setDiscriminatorListeners(new BaseTrainingListener[]{new PerformanceListener(100, true)});
 
-        counterText.textProperty().bindBidirectional(counterProperty, new NumberStringConverter("Train loop: ######"));
-        trainD.fire();
+        counterProperty.addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                counterText.setText("Iteration: " + newValue);
+                counterEpoch.setText("Epoch: " + (long)((newValue.longValue()/(customLearningGuiController).getDataSize())+1));
+            }
+        });
     }
 
     public void loadAction(ActionEvent actionEvent) {
@@ -138,6 +151,8 @@ public class LearningGuiController {
         boolean trainingMode = btnTrain.isSelected();
         btnLoad.setDisable(trainingMode);
         btnSave.setDisable(trainingMode);
+        btnTest.setDisable(trainingMode);
+
         //btnTest.setDisable(trainingMode);
         if (btnTrain.isSelected()) {
             Platform.runLater(this::trainLoop);

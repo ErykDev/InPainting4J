@@ -8,18 +8,19 @@
 
         <ButtonBar prefHeight="40.0" prefWidth="300.0" BorderPane.alignment="CENTER">
             <buttons>
-                <Label fx:id="counterText" minHeight="-Infinity" prefHeight="17.0" prefWidth="300" text="Train loop: 0" />
+                <Label fx:id="counterText" minHeight="-Infinity" prefHeight="17.0" prefWidth="300" text="Iteration: 0" />
+                <Label fx:id="counterEpoch" text="Epoch:1" />
                 <Button fx:id="btnLoad" mnemonicParsing="false" onAction="#loadAction" text="Load" />
                 <Button fx:id="btnSave" mnemonicParsing="false" onAction="#saveAction" text="Save" />
                 <ToggleButton fx:id="btnTrain" mnemonicParsing="false" onAction="#trainAction" text="Train" />
-                <Button mnemonicParsing="false" onAction="#testAction" text="Test" />
+                <Button fx:id="btnTest" mnemonicParsing="false" onAction="#testAction" text="Test" />
             </buttons>
         </ButtonBar>
     </top>
     <center>
         <fx:include source="custom-learning-gui.fxml" />
     </center>
-   <right>
-      <CheckBox fx:id="trainD" mnemonicParsing="false" text="TrainD" BorderPane.alignment="CENTER" />
-   </right>
+    <right>
+        <CheckBox fx:id="trainD" mnemonicParsing="false" text="TrainD" BorderPane.alignment="CENTER" />
+    </right>
 </BorderPane>

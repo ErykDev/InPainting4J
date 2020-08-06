@@ -14,4 +14,6 @@ public interface CustomLearningGuiController {
     GAN onGetGANNetwork();
 
     void onSetNeuralNetwork(GAN restoreMultiLayerNetwork);
+
+    long getDataSize();
 }

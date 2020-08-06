@@ -91,6 +91,10 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
         this._multiDataSets = ar;
     }
 
+    public long getSize(){
+        return _maxSize;
+    }
+
     @Override
     public synchronized boolean hasNext() {
         return (_pointer < _maxSize);
