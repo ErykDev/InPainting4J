@@ -8,8 +8,6 @@ import org.deeplearning4j.nn.conf.graph.MergeVertex;
 import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.*;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
-import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.linalg.learning.config.Nesterovs;
@@ -23,21 +21,6 @@ import static org.inPainting.utils.LayerUtils.reshape;
 
 public class NeuralNetwork {
 
-    public static void saveNetworkGraph(ComputationGraph neuralNetwork, File file) {
-        try {
-            ModelSerializer.writeModel(neuralNetwork, file, true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void saveNetworkGraph(MultiLayerNetwork neuralNetwork, File file) {
-        try {
-            ModelSerializer.writeModel(neuralNetwork, file, true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public static ComputationGraph loadNetworkGraph(File file) throws IOException {
         return ComputationGraph.load(file, true);

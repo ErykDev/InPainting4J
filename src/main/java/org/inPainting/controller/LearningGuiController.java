@@ -8,16 +8,15 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.util.converter.NumberStringConverter;
+import lombok.Synchronized;
+import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
 import org.deeplearning4j.optimize.listeners.PerformanceListener;
 import org.deeplearning4j.util.ModelSerializer;
-import org.nd4j.linalg.learning.config.Adam;
 import org.inPainting.component.UIServerComponent;
 import org.inPainting.nn.GAN;
 import org.inPainting.nn.NeuralNetwork;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.nd4j.linalg.learning.config.Adam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,8 +24,8 @@ import java.io.File;
 import java.io.IOException;
 
 @Component
+@Slf4j
 public class LearningGuiController {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private final IntegerProperty counterProperty = new SimpleIntegerProperty(0);
 
@@ -81,7 +80,7 @@ public class LearningGuiController {
                  .learningRate(GAN.LEARNING_RATE)
                  .beta1(GAN.LEARNING_BETA1)
                  .build())
-                 .build();
+         .build();
 
         log.info(gan.getNetwork().summary());
 
@@ -168,7 +167,8 @@ public class LearningGuiController {
         }
     }
 
-    private synchronized void trainLoop() {
+    @Synchronized
+    private void trainLoop() {
         if (btnTrain.isSelected()) {
             long loopNo = counterProperty.get();
             log.debug("Train Loop: {}", loopNo);

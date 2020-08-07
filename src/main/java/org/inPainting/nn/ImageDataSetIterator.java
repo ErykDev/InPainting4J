@@ -1,6 +1,8 @@
 package org.inPainting.nn;
 
 
+import lombok.Getter;
+import lombok.Synchronized;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSetPreProcessor;
 import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
@@ -15,6 +17,8 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
     private int _pointer = 0;
 
     private int _iterationsPerPicture = 25;
+
+    @Getter
     private int _maxSize;
 
     public ImageDataSetIterator(int IterationsPerPicture, MultiDataSet[] multiDataSets){
@@ -59,6 +63,7 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
         return this._preProcessor;
     }
 
+    @Synchronized
     public MultiDataSet nextRandom(){
         return this._multiDataSets[this._r.nextInt(this._multiDataSets.length)];
     }
@@ -74,13 +79,15 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
     }
 
     @Override
-    public synchronized void reset() {
+    @Synchronized
+    public void reset() {
         this._pointer = 0;
         this.shuffle();
         System.gc();
     }
 
-    public synchronized void shuffle() {
+    @Synchronized
+    public void shuffle() {
         MultiDataSet[] ar = this._multiDataSets;
         for (int i = ar.length - 1; i > 0; i--) {
             int index = _r.nextInt(i + 1);
@@ -91,17 +98,15 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
         this._multiDataSets = ar;
     }
 
-    public long getSize(){
-        return _maxSize;
-    }
-
     @Override
-    public synchronized boolean hasNext() {
+    @Synchronized
+    public boolean hasNext() {
         return (_pointer < _maxSize);
     }
 
     @Override
-    public synchronized MultiDataSet next() {
+    @Synchronized
+    public MultiDataSet next() {
         if (this.hasNext()){
             int dataPosition = (int)(_pointer/ _iterationsPerPicture);
             _pointer++;

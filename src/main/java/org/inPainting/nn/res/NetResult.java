@@ -1,12 +1,16 @@
 package org.inPainting.nn.res;
 
 import javafx.scene.image.WritableImage;
+import lombok.Getter;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.inPainting.utils.ImageUtils;
 
 public class NetResult {
+    @Getter
     private INDArray _outputPicture;
+    @Getter
     private double _fakeScore;
+    @Getter
     private double _realScore;
 
     public NetResult(INDArray[] netOutput){
@@ -26,18 +30,5 @@ public class NetResult {
 
     public WritableImage drawPicture(int width, int height) {
         return ImageUtils.drawImage(this._outputPicture, width, height);
-    }
-
-    public INDArray getOutput() {
-        return this._outputPicture;
-    }
-
-
-    public double getFakeScore() {
-        return this._fakeScore;
-    }
-
-    public double getRealScore() {
-        return this._realScore;
     }
 }
