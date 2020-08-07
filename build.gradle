@@ -35,7 +35,9 @@ dependencies {
     implementation group: 'org.openjfx', name: 'javafx', version: '11', ext: 'pom'
 
     implementation "org.deeplearning4j:deeplearning4j-core:${dl4j_version}"
-    implementation('org.projectlombok:lombok')
+
+    compileOnly('org.projectlombok:lombok:1.18.12')
+    annotationProcessor('org.projectlombok:lombok:1.18.12')
     
     if (dl4j_use_cuda) {
         //implementation 'org.bytedeco.javacpp-presets:cuda:10.0-7.4-1.4.4:windows-x86_64-redist'
