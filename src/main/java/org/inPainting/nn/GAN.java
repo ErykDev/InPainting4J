@@ -202,6 +202,7 @@ public class GAN {
         return new ComputationGraph(new NeuralNetConfiguration.Builder()
                 .updater(updater)
                 .l2(5*1E-4)
+                .activation(Activation.RELU)
                 .graphBuilder()
                 .allowDisconnected(true)
                 .addInputs("Input")
