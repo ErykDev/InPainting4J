@@ -220,7 +220,7 @@ public class GAN {
                                 ((inputChannels*4)),
                                 doubleStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "Input")
                 //Encoder 128x128x16 -> 64x64x64
                 .addLayer("GENCNN2",
@@ -229,7 +229,7 @@ public class GAN {
                                 (inputChannels*16),
                                 doubleStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENCNN1")
                 //Encoder 64x64x64 -> 32x32x256
                 .addLayer("GENCNN3",
@@ -238,7 +238,7 @@ public class GAN {
                                 (inputChannels*64),
                                 doubleStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENCNN2")
                 //Encoder 32x32x256 -> 16x16x1024
                 .addLayer("GENCNN4",
@@ -247,7 +247,7 @@ public class GAN {
                                 (inputChannels*256),
                                 doubleStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENCNN3")
 
 
@@ -267,7 +267,7 @@ public class GAN {
                                 (inputChannels*64),
                                 noStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENmerge1")
                 //Decoder Vertex 32x32x256 -> 64x64x64
                 .addVertex("GENRV2",
@@ -284,7 +284,7 @@ public class GAN {
                                 (inputChannels*16),
                                 noStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENmerge2")
                 //Decoder Vertex 64x64x64x1 -> 128x128x*16
                 .addVertex("GENRV3",
@@ -299,7 +299,7 @@ public class GAN {
                         convInitSame(
                                 (inputChannels*4*2),
                                 (inputChannels*4),
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENmerge3")
                 //Decoder Vertex 128x128x*16 -> 256x256x4
                 .addVertex("GENRV4",
@@ -314,7 +314,7 @@ public class GAN {
                         convInitSame(
                                 (inputChannels*2),
                                 (outputChannels),
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENmerge4")
 
 

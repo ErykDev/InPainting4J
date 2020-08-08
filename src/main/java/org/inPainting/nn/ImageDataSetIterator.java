@@ -11,61 +11,61 @@ import java.util.Random;
 
 public final class ImageDataSetIterator implements MultiDataSetIterator {
 
-    private Random _r;
-    private MultiDataSet[] _multiDataSets;
-    private MultiDataSetPreProcessor _preProcessor = null;
+    private Random r;
+    private MultiDataSet[] multiDataSets;
+    private MultiDataSetPreProcessor preProcessor = null;
     private int _pointer = 0;
 
-    private int _iterationsPerPicture = 25;
+    private int iterationsPerPicture = 25;
 
     @Getter
-    private int _maxSize;
+    private int maxSize;
 
     public ImageDataSetIterator(int IterationsPerPicture, MultiDataSet[] multiDataSets){
-        this._iterationsPerPicture = IterationsPerPicture;
-        this._multiDataSets = multiDataSets;
-        this._maxSize = (multiDataSets.length - 1) * IterationsPerPicture;
-        this._r = new Random();
+        this.iterationsPerPicture = IterationsPerPicture;
+        this.multiDataSets = multiDataSets;
+        this.maxSize = (multiDataSets.length - 1) * IterationsPerPicture;
+        this.r = new Random();
 
         this.shuffle();
     }
 
     public ImageDataSetIterator(MultiDataSet[] multiDataSets){
-        this._multiDataSets = multiDataSets;
-        this._maxSize = (multiDataSets.length - 1) * _iterationsPerPicture;
-        this._r = new Random();
+        this.multiDataSets = multiDataSets;
+        this.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
+        this.r = new Random();
 
         this.shuffle();
     }
 
     public ImageDataSetIterator(MultiDataSet[] multiDataSets, int seed){
-        this._multiDataSets = multiDataSets;
-        this._maxSize = (multiDataSets.length - 1) * _iterationsPerPicture;
-        this._r = new Random(seed);
+        this.multiDataSets = multiDataSets;
+        this.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
+        this.r = new Random(seed);
 
         this.shuffle();
     }
 
     @Override
     public synchronized MultiDataSet next(int num) {
-        return _multiDataSets[num];
+        return multiDataSets[num];
     }
 
     @Override
     public void setPreProcessor(MultiDataSetPreProcessor preProcessor) {
-        for (MultiDataSet multiDataSet : _multiDataSets)
+        for (MultiDataSet multiDataSet : multiDataSets)
             preProcessor.preProcess(multiDataSet);
-        this._preProcessor = preProcessor;
+        this.preProcessor = preProcessor;
     }
 
     @Override
     public MultiDataSetPreProcessor getPreProcessor() {
-        return this._preProcessor;
+        return this.preProcessor;
     }
 
     @Synchronized
     public MultiDataSet nextRandom(){
-        return this._multiDataSets[this._r.nextInt(this._multiDataSets.length)];
+        return this.multiDataSets[this.r.nextInt(this.multiDataSets.length)];
     }
 
     @Override
@@ -88,31 +88,31 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
 
     @Synchronized
     public void shuffle() {
-        MultiDataSet[] ar = this._multiDataSets;
+        MultiDataSet[] ar = this.multiDataSets;
         for (int i = ar.length - 1; i > 0; i--) {
-            int index = _r.nextInt(i + 1);
+            int index = r.nextInt(i + 1);
             MultiDataSet a = ar[index];
             ar[index] = ar[i];
             ar[i] = a;
         }
-        this._multiDataSets = ar;
+        this.multiDataSets = ar;
     }
 
     @Override
     @Synchronized
     public boolean hasNext() {
-        return (_pointer < _maxSize);
+        return (_pointer < maxSize);
     }
 
     @Override
     @Synchronized
     public MultiDataSet next() {
         if (this.hasNext()){
-            int dataPosition = (int)(_pointer/ _iterationsPerPicture);
+            int dataPosition = (int)(_pointer/ iterationsPerPicture);
             _pointer++;
-            return _multiDataSets[dataPosition];
+            return multiDataSets[dataPosition];
         } else {
-            return _multiDataSets[_multiDataSets.length-1];
+            return multiDataSets[multiDataSets.length-1];
         }
     }
 }

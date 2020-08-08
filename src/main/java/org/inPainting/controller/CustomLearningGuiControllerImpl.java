@@ -90,7 +90,7 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
     @Override
     public long getDataSize(){
-        return trainDataSet.get_maxSize();
+        return trainDataSet.getMaxSize();
     }
 
 }
