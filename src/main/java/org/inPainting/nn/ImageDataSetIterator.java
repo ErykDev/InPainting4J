@@ -14,7 +14,7 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
     private Random r;
     private MultiDataSet[] multiDataSets;
     private MultiDataSetPreProcessor preProcessor = null;
-    private int _pointer = 0;
+    private int pointer = 0;
 
     private int iterationsPerPicture = 25;
 
@@ -82,7 +82,7 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
     @Override
     @Synchronized
     public void reset() {
-        this._pointer = 0;
+        this.pointer = 0;
         this.shuffle();
         System.gc();
     }
@@ -102,15 +102,15 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
     @Override
     @Synchronized
     public boolean hasNext() {
-        return (_pointer < maxSize);
+        return (pointer < maxSize);
     }
 
     @Override
     @Synchronized
     public MultiDataSet next() {
         if (this.hasNext()){
-            int dataPosition = (int)(_pointer/ iterationsPerPicture);
-            _pointer++;
+            int dataPosition = (int)(pointer / iterationsPerPicture);
+            pointer++;
             return multiDataSets[dataPosition];
         } else {
             return multiDataSets[multiDataSets.length-1];
