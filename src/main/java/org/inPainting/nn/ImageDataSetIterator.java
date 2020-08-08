@@ -47,7 +47,8 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
     }
 
     @Override
-    public synchronized MultiDataSet next(int num) {
+    @Synchronized
+    public MultiDataSet next(int num) {
         return multiDataSets[num];
     }
 
