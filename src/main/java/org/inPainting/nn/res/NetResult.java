@@ -31,4 +31,9 @@ public class NetResult {
     public WritableImage drawPicture(int width, int height) {
         return ImageUtils.drawImage(this._outputPicture, width, height);
     }
+
+    @Override
+    protected void finalize() throws Throwable {
+        _outputPicture.close();
+    }
 }

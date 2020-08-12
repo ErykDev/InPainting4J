@@ -1,7 +1,7 @@
 buildscript {
     ext {
         dl4j_use_cuda = false
-        dl4j_version = "1.0.0-beta5"
+        dl4j_version = "1.0.0-beta7"
         springBootVersion = '2.0.1.RELEASE'
         cuda_version = "10.0"
     }
@@ -47,6 +47,6 @@ dependencies {
     } else {
         implementation "org.nd4j:nd4j-native-platform:${dl4j_version}"
     }
-    implementation "org.deeplearning4j:arbiter-ui_2.11:${dl4j_version}"
+    implementation group: 'org.deeplearning4j', name: 'arbiter-ui', version: "${dl4j_version}"
     implementation group: 'org.datavec', name: 'datavec-data-codec', version: "${dl4j_version}"
 }

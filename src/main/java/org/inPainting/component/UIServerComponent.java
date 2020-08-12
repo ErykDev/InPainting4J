@@ -1,12 +1,11 @@
 package org.inPainting.component;
 
-import org.deeplearning4j.api.storage.StatsStorage;
+import org.deeplearning4j.core.storage.StatsStorage;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.optimize.listeners.PerformanceListener;
-import org.deeplearning4j.ui.api.UIServer;
-import org.deeplearning4j.ui.stats.StatsListener;
-import org.deeplearning4j.ui.storage.FileStatsStorage;
 import org.springframework.stereotype.Component;
+import org.deeplearning4j.ui.api.UIServer;
+import org.deeplearning4j.ui.model.stats.StatsListener;
+import org.deeplearning4j.ui.model.storage.FileStatsStorage;
 
 import java.io.File;
 
@@ -18,7 +17,7 @@ public class UIServerComponent {
     private StatsListener statsListener;
     private ComputationGraph currentNetwork;
 
-    public UIServerComponent(){
+    public UIServerComponent() {
         statsStorage = new FileStatsStorage(new File("ui-stats.dat"));
         statsListener = new StatsListener(statsStorage);
         uiServer = UIServer.getInstance();
@@ -33,7 +32,7 @@ public class UIServerComponent {
             if (currentNetwork != null)
                 currentNetwork.getListeners().remove(statsListener);
             if (multiLayerNetwork != null)
-                multiLayerNetwork.addListeners(statsListener, new PerformanceListener(1000,true));
+                multiLayerNetwork.addListeners(statsListener);
 
             currentNetwork = multiLayerNetwork;
             System.gc();
@@ -41,7 +40,7 @@ public class UIServerComponent {
     }
 
 
-    public void stop() {
+    public void stop() throws InterruptedException {
         if (useUI) {
             uiServer.stop();
         }
