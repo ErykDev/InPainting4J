@@ -2,13 +2,12 @@ package org.inPainting.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.image.ImageView;
-import javafx.scene.paint.Color;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.inPainting.nn.GAN;
-import org.inPainting.nn.ImageDataSetIterator;
+import org.inPainting.nn.data.ImageMemoryDataSetIterator;
 import org.inPainting.nn.res.NetResult;
-import org.inPainting.utils.ImageUtils;
+import org.inPainting.utils.ImageLoader;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.springframework.stereotype.Component;
@@ -25,7 +24,9 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
     private GAN gan;
 
-    private ImageDataSetIterator trainDataSet;
+    private ImageMemoryDataSetIterator trainDataSet;
+
+    private ImageLoader imageLoader = new ImageLoader();
 
     @Override
     @Synchronized
@@ -43,17 +44,18 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
         //INDArray mergedOutput = netResult.mergeByMask(input, width, height);
 
-        outputImageView.setImage(ImageUtils.emptyImage(Color.BLACK, width, height));
-        outputImageView.setImage(ImageUtils.drawImage(netResult.get_outputPicture(), width, height));
-        realImageView.setImage(ImageUtils.drawImage(real, width, height));
+        outputImageView.setImage(imageLoader.drawImage(netResult.getOutputPicture(), width, height));
+        realImageView.setImage(imageLoader.drawImage(real, width, height));
 
-        log.info("Refreshing GUI; Result Score: " + netResult.get_realScore()+";");
+        log.info("Refreshing GUI; Result Score: " + netResult.getRealScore()+";");
+
+        netResult = null;
     }
 
     @Override
     public void onInitialize() {
         // loading training data
-        trainDataSet = ImageUtils.prepareData();
+        trainDataSet = imageLoader.prepareInMemoryData();
         log.info("Done loading train data");
         System.gc();
     }

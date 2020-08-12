@@ -3,37 +3,37 @@ package org.inPainting.nn.res;
 import javafx.scene.image.WritableImage;
 import lombok.Getter;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.inPainting.utils.ImageUtils;
+import org.inPainting.utils.ImageLoader;
 
 public class NetResult {
     @Getter
-    private INDArray _outputPicture;
+    private INDArray outputPicture;
     @Getter
-    private double _fakeScore;
+    private double fakeScore;
     @Getter
-    private double _realScore;
+    private double realScore;
 
     public NetResult(INDArray[] netOutput){
-        this._outputPicture = netOutput[1];
-        this._realScore = netOutput[0].getDouble(1);
-        this._fakeScore = netOutput[0].getDouble(0);
+        this.outputPicture = netOutput[1];
+        this.realScore = netOutput[0].getDouble(1);
+        this.fakeScore = netOutput[0].getDouble(0);
     }
 
     public INDArray mergeByMask(INDArray inputWithMask, int width, int height){
-        return ImageUtils.mergeImagesByMask(
+        return ImageLoader.mergeImagesByMask(
                 inputWithMask,
-                this._outputPicture,
+                this.outputPicture,
                 width,
                 height
         );
     }
 
-    public WritableImage drawPicture(int width, int height) {
-        return ImageUtils.drawImage(this._outputPicture, width, height);
+    public WritableImage drawPicture(int width, int height, ImageLoader imageLoader) {
+        return imageLoader.drawImage(this.outputPicture, width, height);
     }
 
     @Override
     protected void finalize() throws Throwable {
-        _outputPicture.close();
+        outputPicture.close();
     }
 }

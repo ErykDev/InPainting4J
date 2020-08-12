@@ -21,7 +21,7 @@ import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.*;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.inPainting.nn.res.NetResult;
-import org.inPainting.utils.ImageUtils;
+import org.inPainting.utils.ImageLoader;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -34,7 +34,9 @@ public class GAN {
     public static final double LEARNING_RATE = 2E-4;
     public static final double LEARNING_BETA1 = 5E-1;
     public static final double LEARNING_LAMBDA = 10E+1;
-    private static final int[] _NetInputShape = {1,4,256,256};
+    public static final int[] _NetInputShape = {1,4,256,256};
+
+    private ImageLoader imageLoader;
 
     public interface DiscriminatorProvider {
         ComputationGraph provide(IUpdater updater);
@@ -70,6 +72,8 @@ public class GAN {
         this.cacheMode = builder.cacheMode;
         this.seed = builder.seed;
 
+        this.imageLoader = new ImageLoader();
+
         this.defineGan();
     }
 
@@ -80,11 +84,11 @@ public class GAN {
 
     public WritableImage drawOutput(Image image, Image mask) {
         assert ((image.getHeight() == mask.getHeight())&&(image.getWidth() == mask.getWidth()));
-        return ImageUtils.drawImage(gan.output(ImageUtils.convertToRank4INDArrayInput(image, mask))[1], (int)image.getWidth(), (int)image.getHeight());
+        return imageLoader.drawImage(gan.output(imageLoader.convertToRank4INDArrayInput(image, mask))[1], (int)image.getWidth(), (int)image.getHeight());
     }
 
     public WritableImage drawOutput(INDArray PictureWithMask, int width, int height) {
-        return ImageUtils.drawImage(gan.output(PictureWithMask)[1], width, height);
+        return imageLoader.drawImage(gan.output(PictureWithMask)[1], width, height);
     }
 
     public NetResult getOutput(INDArray PictureWithMask) {

@@ -1,4 +1,4 @@
-package org.inPainting.nn;
+package org.inPainting.nn.data;
 
 
 import lombok.Getter;
@@ -9,7 +9,7 @@ import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 
 import java.util.Random;
 
-public final class ImageDataSetIterator implements MultiDataSetIterator {
+public final class ImageMemoryDataSetIterator implements MultiDataSetIterator {
 
     private Random r;
     private MultiDataSet[] multiDataSets;
@@ -21,7 +21,7 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
     @Getter
     private int maxSize;
 
-    public ImageDataSetIterator(int IterationsPerPicture, MultiDataSet[] multiDataSets){
+    public ImageMemoryDataSetIterator(int IterationsPerPicture, MultiDataSet[] multiDataSets){
         this.iterationsPerPicture = IterationsPerPicture;
         this.multiDataSets = multiDataSets;
         this.maxSize = (multiDataSets.length - 1) * IterationsPerPicture;
@@ -30,7 +30,7 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
         this.shuffle();
     }
 
-    public ImageDataSetIterator(MultiDataSet[] multiDataSets){
+    public ImageMemoryDataSetIterator(MultiDataSet[] multiDataSets){
         this.multiDataSets = multiDataSets;
         this.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
         this.r = new Random();
@@ -38,7 +38,7 @@ public final class ImageDataSetIterator implements MultiDataSetIterator {
         this.shuffle();
     }
 
-    public ImageDataSetIterator(MultiDataSet[] multiDataSets, int seed){
+    public ImageMemoryDataSetIterator(MultiDataSet[] multiDataSets, int seed){
         this.multiDataSets = multiDataSets;
         this.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
         this.r = new Random(seed);
