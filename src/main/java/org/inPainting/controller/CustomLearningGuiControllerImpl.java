@@ -26,7 +26,7 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
     private ImageMemoryDataSetIterator trainDataSet;
 
-    private ImageLoader imageLoader = new ImageLoader();
+    private ImageLoader imageLoader = new ImageLoader(GAN._NetInputShape);
 
     @Override
     @Synchronized

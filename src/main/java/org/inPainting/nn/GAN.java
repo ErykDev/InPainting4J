@@ -72,7 +72,7 @@ public class GAN {
         this.cacheMode = builder.cacheMode;
         this.seed = builder.seed;
 
-        this.imageLoader = new ImageLoader();
+        this.imageLoader = new ImageLoader(GAN._NetInputShape);
 
         this.defineGan();
     }

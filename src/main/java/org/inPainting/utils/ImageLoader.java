@@ -5,12 +5,12 @@ import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
-import org.inPainting.nn.data.FileEntry;
-import org.inPainting.nn.data.ImageFileDataSetIterator;
-import org.inPainting.nn.data.ImageMemoryDataSetIterator;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.factory.Nd4j;
+import org.inPainting.nn.data.FileEntry;
+import org.inPainting.nn.data.ImageFileDataSetIterator;
+import org.inPainting.nn.data.ImageMemoryDataSetIterator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,11 +32,12 @@ public final class ImageLoader {
     private INDArray temp1;
     private INDArray temp2;
 
+    private int[] netInputShape = {1,4,256,256};
 
-    private final static int[] _NetInputShape = {1,4,256,256};
+    public ImageLoader(int... neuralNetworkInputShape) {
+        assert neuralNetworkInputShape.length == 4;
 
-    public ImageLoader() {
-        // This is intentionally empty
+        this.netInputShape = neuralNetworkInputShape;
     }
 
     public WritableImage emptyImage(Color color, int width, int height) {
@@ -73,15 +74,15 @@ public final class ImageLoader {
     public INDArray convertToRank4INDArrayOutput(Image inputImage) {
 
         assert inputImage != null;
-        assert inputImage.getHeight() <= ImageLoader._NetInputShape[2];
-        assert inputImage.getWidth() <= ImageLoader._NetInputShape[3];
+        assert inputImage.getHeight() <= netInputShape[2];
+        assert inputImage.getWidth() <= netInputShape[3];
 
         int width = (int) inputImage.getWidth();
         int height = (int) inputImage.getHeight();
 
         int maskChannels = 1;
 
-        temp0 = Nd4j.zeros(ImageLoader._NetInputShape[0],(ImageLoader._NetInputShape[1] - maskChannels),height,width);
+        temp0 = Nd4j.zeros(netInputShape[0],(netInputShape[1] - maskChannels),height,width);
         PixelReader inputPR = inputImage.getPixelReader();
 
         for (int y = 0; y < height; y++) {
@@ -109,13 +110,13 @@ public final class ImageLoader {
         assert mask.getHeight() == inputImage.getHeight();
         assert mask.getWidth() == inputImage.getWidth();
 
-        assert inputImage.getHeight() <= ImageLoader._NetInputShape[2];
-        assert inputImage.getWidth() <= ImageLoader._NetInputShape[3];
+        assert inputImage.getHeight() <= netInputShape[2];
+        assert inputImage.getWidth() <= netInputShape[3];
 
         int width = (int) inputImage.getWidth();
         int height = (int) inputImage.getHeight();
 
-        temp0 = Nd4j.zeros(ImageLoader._NetInputShape[0], ImageLoader._NetInputShape[1],height,width);
+        temp0 = Nd4j.zeros(netInputShape[0], netInputShape[1],height,width);
 
         PixelReader inputPR = inputImage.getPixelReader();
         PixelReader maskinputPR = mask.getPixelReader();
