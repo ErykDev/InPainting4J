@@ -11,15 +11,14 @@ import org.inPainting.nn.GAN;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSetPreProcessor;
-import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 
-
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Random;
 
-public final class ImageFileDataSetIterator implements MultiDataSetIterator {
+public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
     private Random r;
 
@@ -90,6 +89,7 @@ public final class ImageFileDataSetIterator implements MultiDataSetIterator {
     }
 
     @SneakyThrows
+    @Override
     @Synchronized
     public MultiDataSet nextRandom(){
         return this.convertToDataSet(this.multiDataSets[this.r.nextInt(this.multiDataSets.length)]);
@@ -113,6 +113,7 @@ public final class ImageFileDataSetIterator implements MultiDataSetIterator {
         System.gc();
     }
 
+    @Override
     @Synchronized
     public void shuffle() {
         FileEntry[] ar = this.multiDataSets;
@@ -262,5 +263,28 @@ public final class ImageFileDataSetIterator implements MultiDataSetIterator {
 
     private double scaleColor(double value) {
         return (value);
+    }
+
+    public static class FileEntry {
+
+        @Getter
+        private File input;
+        @Getter
+        private File output;
+        @Getter
+        private File mask;
+
+        public FileEntry(File input, File output, File mask){
+            this.input = input;
+            this.output = output;
+            this.mask = mask;
+        }
+
+        @Override
+        protected void finalize() throws Throwable {
+            input = null;
+            output = null;
+            mask = null;
+        }
     }
 }

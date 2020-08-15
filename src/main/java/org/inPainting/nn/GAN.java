@@ -148,6 +148,10 @@ public class GAN {
 
             discriminator.fit(realSet);
             discriminator.fit(fakeSet);
+
+            realSet.detach();
+            fakeSet.detach();
+            ganOutput = null;
         }
 
         // Update the discriminator in the Pix2PixGAN network

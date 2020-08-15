@@ -8,7 +8,6 @@ import javafx.scene.paint.Color;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.factory.Nd4j;
-import org.inPainting.nn.data.FileEntry;
 import org.inPainting.nn.data.ImageFileDataSetIterator;
 import org.inPainting.nn.data.ImageMemoryDataSetIterator;
 
@@ -177,10 +176,10 @@ public final class ImageLoader {
 
     public ImageFileDataSetIterator prepareInFileData(){
 
-        FileEntry[] res = new FileEntry[new File(ImageLoader.class.getResource("/data/256/inputs/").getFile()).listFiles().length/2];
+        ImageFileDataSetIterator.FileEntry[] res = new ImageFileDataSetIterator.FileEntry[new File(ImageLoader.class.getResource("/data/256/inputs/").getFile()).listFiles().length/2];
 
         for (int i = 1; i < res.length + 1; i++) {
-            res[i-1] = new FileEntry(
+            res[i-1] = new ImageFileDataSetIterator.FileEntry(
                     new File(ImageLoader.class.getResource("/data/256/inputs/input"+i+".png").getFile()),
                     new File(ImageLoader.class.getResource("/data/256/expected/expected"+i+".png").getFile()),
                     new File(ImageLoader.class.getResource("/data/256/inputs/input"+i+"_mask.png").getFile())
@@ -216,7 +215,7 @@ public final class ImageLoader {
         );
     }
 
-    public MultiDataSet convertToDataSet(FileEntry fileEntry) throws IOException {
+    public MultiDataSet convertToDataSet(ImageFileDataSetIterator.FileEntry fileEntry) throws IOException {
 
         inputImageFileInputStreamTemp = new FileInputStream(fileEntry.getInput());
         expectedImageImageFileInputStreamTemp = new FileInputStream(fileEntry.getOutput());

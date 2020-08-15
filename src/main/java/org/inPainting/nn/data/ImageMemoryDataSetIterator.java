@@ -5,11 +5,10 @@ import lombok.Getter;
 import lombok.Synchronized;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSetPreProcessor;
-import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 
 import java.util.Random;
 
-public final class ImageMemoryDataSetIterator implements MultiDataSetIterator {
+public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
 
     private Random r;
     private MultiDataSet[] multiDataSets;
@@ -64,6 +63,7 @@ public final class ImageMemoryDataSetIterator implements MultiDataSetIterator {
         return this.preProcessor;
     }
 
+    @Override
     @Synchronized
     public MultiDataSet nextRandom(){
         return this.multiDataSets[this.r.nextInt(this.multiDataSets.length)];
@@ -87,6 +87,7 @@ public final class ImageMemoryDataSetIterator implements MultiDataSetIterator {
         System.gc();
     }
 
+    @Override
     @Synchronized
     public void shuffle() {
         MultiDataSet[] ar = this.multiDataSets;
