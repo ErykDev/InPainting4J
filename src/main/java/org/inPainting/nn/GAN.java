@@ -2,6 +2,7 @@ package org.inPainting.nn;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
+import lombok.Getter;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.*;
 import org.deeplearning4j.nn.conf.distribution.NormalDistribution;
@@ -45,8 +46,10 @@ public class GAN {
     protected Supplier<ComputationGraph> generatorSupplier;
     protected DiscriminatorProvider discriminatorSupplier;
 
+    @Getter
     protected ComputationGraph discriminator;
-    protected ComputationGraph gan;
+    @Getter
+    protected ComputationGraph network;
 
     protected IUpdater updater = new Adam(LEARNING_RATE);
     protected IUpdater biasUpdater;
@@ -78,37 +81,29 @@ public class GAN {
     }
 
     public GAN(ComputationGraph discriminator, ComputationGraph gan) {
-        this.gan = gan;
+        this.network = gan;
         this.discriminator = discriminator;
     }
 
     public WritableImage drawOutput(Image image, Image mask) {
         assert ((image.getHeight() == mask.getHeight())&&(image.getWidth() == mask.getWidth()));
-        return imageLoader.drawImage(gan.output(imageLoader.convertToRank4INDArrayInput(image, mask))[1], (int)image.getWidth(), (int)image.getHeight());
+        return imageLoader.drawImage(network.output(imageLoader.convertToRank4INDArrayInput(image, mask))[1], (int)image.getWidth(), (int)image.getHeight());
     }
 
     public WritableImage drawOutput(INDArray PictureWithMask, int width, int height) {
-        return imageLoader.drawImage(gan.output(PictureWithMask)[1], width, height);
+        return imageLoader.drawImage(network.output(PictureWithMask)[1], width, height);
     }
 
     public NetResult getOutput(INDArray PictureWithMask) {
-        return new NetResult(gan.output(PictureWithMask));
-    }
-
-    public ComputationGraph getDiscriminator() {
-        return discriminator;
-    }
-
-    public ComputationGraph getNetwork(){
-        return gan;
+        return new NetResult(network.output(PictureWithMask));
     }
 
     public Evaluation evaluateGan(DataSetIterator data) {
-        return gan.evaluate(data);
+        return network.evaluate(data);
     }
 
     public Evaluation evaluateGan(DataSetIterator data, List<String> labelsList) {
-        return gan.evaluate(data, labelsList);
+        return network.evaluate(data, labelsList);
     }
 
     public void setDiscriminatorListeners(BaseTrainingListener[] listeners) {
@@ -116,7 +111,7 @@ public class GAN {
     }
 
     public void setGanListeners(BaseTrainingListener[] listeners) {
-        gan.setListeners(listeners);
+        network.setListeners(listeners);
     }
 
     public void fit(MultiDataSetIterator realData, int numEpochs) {
@@ -137,7 +132,7 @@ public class GAN {
             }
         }*/
         if (trainDiscriminator) {
-            INDArray[] ganOutput = gan.output(next.getFeatures());
+            INDArray[] ganOutput = network.output(next.getFeatures());
 
             //Pix2PixGAN output
             INDArray fakeImage = ganOutput[1];
@@ -171,7 +166,7 @@ public class GAN {
 
         // Fit the Pix2PixGAN on the adversarial set, trying to fool the discriminator by generating
         // better fake images.
-        gan.fit(new MultiDataSet(
+        network.fit(new MultiDataSet(
                 new INDArray[]{
                         next.getFeatures()[0]
                 },
@@ -189,13 +184,13 @@ public class GAN {
         ComputationGraph ganDiscriminator = discriminatorSupplier.provide(UPDATER_ZERO);
         ganDiscriminator.init();
 
-        gan = GAN.NET(updater);
-        gan.init();
+        network = GAN.NET(updater);
+        network.init();
 
-        int genLayerCount = (gan.getLayers().length) - discriminator.getLayers().length;
+        int genLayerCount = (network.getLayers().length) - discriminator.getLayers().length;
         //updating gan's params
-        for (int i = genLayerCount; i < gan.getLayers().length; i++)
-            gan.getLayer(i).setParams(discriminator.getLayer(i - genLayerCount).params());
+        for (int i = genLayerCount; i < network.getLayers().length; i++)
+            network.getLayer(i).setParams(discriminator.getLayer(i - genLayerCount).params());
     }
 
     public static ComputationGraph NET(IUpdater updater) {
@@ -403,9 +398,9 @@ public class GAN {
      * as well.
      */
     private void updateGanWithDiscriminator() {
-        int genLayerCount = gan.getLayers().length - discriminator.getLayers().length; //Position of first Discriminator Layer
-        for (int i = genLayerCount; i < gan.getLayers().length; i++)
-            gan.getLayer(i).setParams(discriminator.getLayer(i - genLayerCount).params());
+        int genLayerCount = network.getLayers().length - discriminator.getLayers().length; //Position of first Discriminator Layer
+        for (int i = genLayerCount; i < network.getLayers().length; i++)
+            network.getLayer(i).setParams(discriminator.getLayer(i - genLayerCount).params());
     }
 
 
