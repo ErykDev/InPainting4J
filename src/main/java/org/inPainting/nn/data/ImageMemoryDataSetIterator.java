@@ -11,11 +11,15 @@ import java.util.Random;
 public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
 
     private Random r;
+
     private MultiDataSet[] multiDataSets;
+
+    @Getter
     private MultiDataSetPreProcessor preProcessor = null;
+
     private int pointer = 0;
 
-    private int iterationsPerPicture = 25;
+    private int iterationsPerPicture = 20;
 
     @Getter
     private int maxSize;
@@ -56,11 +60,6 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
         for (MultiDataSet multiDataSet : multiDataSets)
             preProcessor.preProcess(multiDataSet);
         this.preProcessor = preProcessor;
-    }
-
-    @Override
-    public MultiDataSetPreProcessor getPreProcessor() {
-        return this.preProcessor;
     }
 
     @Override
@@ -110,11 +109,9 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
     @Synchronized
     public MultiDataSet next() {
         if (this.hasNext()){
-            int dataPosition = (int)(pointer / iterationsPerPicture);
             pointer++;
-            return multiDataSets[dataPosition];
-        } else {
-            return multiDataSets[multiDataSets.length-1];
-        }
+            return multiDataSets[(int)(pointer / iterationsPerPicture)];
+        } else
+            return multiDataSets[multiDataSets.length - 1];
     }
 }

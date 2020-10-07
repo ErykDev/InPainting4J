@@ -4,13 +4,16 @@ import javafx.fxml.FXML;
 import javafx.scene.image.ImageView;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
+import org.deeplearning4j.util.ModelSerializer;
+import org.nd4j.linalg.dataset.MultiDataSet;
+import org.inPainting.nn.data.ImageFileDataSetIterator;
 import org.inPainting.nn.GAN;
-import org.inPainting.nn.data.ImageMemoryDataSetIterator;
 import org.inPainting.nn.res.NetResult;
 import org.inPainting.utils.ImageLoader;
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.MultiDataSet;
 import org.springframework.stereotype.Component;
+
+import java.io.File;
+import java.io.IOException;
 
 @Component
 @Slf4j
@@ -24,12 +27,13 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
     private GAN gan;
 
-    private ImageMemoryDataSetIterator trainDataSet;
+    private ImageFileDataSetIterator trainDataSet;
 
-    private ImageLoader imageLoader = new ImageLoader(GAN._NetInputShape);
+    private ImageLoader imageLoader = new ImageLoader(GAN._MergedNetInputShape);
+
+    private NetResult tempOutput;
 
     @Override
-    @Synchronized
     public void onRefreshGUI() {
 
         MultiDataSet multiDataSet = trainDataSet.nextRandom();
@@ -37,31 +41,50 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
         int width = 256;
         int height = 256;
 
-        INDArray input = multiDataSet.getFeatures()[0];
-        INDArray real = multiDataSet.getLabels()[0];
+        //INDArray input = multiDataSet.getFeatures()[0];
+        //INDArray real = multiDataSet.getLabels()[0];
 
-        NetResult netResult = gan.getOutput(input);
+        tempOutput = gan.getOutput(multiDataSet.getFeatures()[0],multiDataSet.getFeatures()[1]);
 
-        //INDArray mergedOutput = netResult.mergeByMask(input, width, height);
+        outputImageView.setImage(imageLoader.drawImage(tempOutput.mergeByMask(multiDataSet.getFeatures()[0],multiDataSet.getFeatures()[1], width, height), width, height));
+        realImageView.setImage(imageLoader.drawImage(multiDataSet.getLabels()[0], width, height));
 
-        outputImageView.setImage(imageLoader.drawImage(netResult.getOutputPicture(), width, height));
-        realImageView.setImage(imageLoader.drawImage(real, width, height));
+        log.info("Refreshing GUI; Result Score: " + tempOutput.getRealScore()+";");
 
-        log.info("Refreshing GUI; Result Score: " + netResult.getRealScore()+";");
+        tempOutput = null;
+        System.gc();
+    }
 
-        netResult = null;
+    @Synchronized
+    public void reloadData(){
+        log.info("Reloading data");
+        this.onInitialize();
+    }
+
+    @Override
+    public long getDataSize(){
+        return trainDataSet.getMaxSize();
     }
 
     @Override
     public void onInitialize() {
-        // loading training data
-        trainDataSet = imageLoader.prepareInMemoryData();
+        //Switching to storing data in File instead of memory
+        trainDataSet = imageLoader.prepareInFileData();
         log.info("Done loading train data");
-        System.gc();
     }
 
     @Override
     public void onTrainLoop(long loopNo, boolean t) {
+        if (loopNo % (trainDataSet.getMaxSize()*2) == 0 && loopNo != 0){
+            try {
+                ModelSerializer.writeModel(gan.getDiscriminator(), new File("discriminator.zip"),true);
+                ModelSerializer.writeModel(gan.getNetwork(), new File("gan.zip"),true);
+                System.gc();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            log.info("Saving model loopNo="+loopNo);
+        }
 
         if (!trainDataSet.hasNext()) {
             log.info("Resetting ImageDataSetIterator");
@@ -69,9 +92,10 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
             System.gc();
         }
 
-        if (loopNo % 14 == 0 && loopNo != 0)
+        if (loopNo % 9 == 0 && loopNo != 0) {
             gan.fit(trainDataSet.next(), t);
-        else
+            System.gc();
+        } else
             gan.fit(trainDataSet.next(), false);
     }
 
@@ -89,10 +113,4 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
     public void onSetNeuralNetwork(GAN restoreMultiLayerNetwork) {
         this.gan = restoreMultiLayerNetwork;
     }
-
-    @Override
-    public long getDataSize(){
-        return trainDataSet.getMaxSize();
-    }
-
 }

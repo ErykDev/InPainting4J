@@ -143,18 +143,17 @@ public final class ImageLoader {
     }
 
 
-    public static INDArray mergeImagesByMask(INDArray ImageWithMask, INDArray Image, int width, int height) {
-
+    public static INDArray mergeImagesByMask(INDArray IImage, INDArray Mask, INDArray OImage, int width, int height) {
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                if (ImageWithMask.getDouble(0,0,y,x) == 0.0D){
-                    Image.putScalar(new int[]{0,0,y,x},ImageWithMask.getDouble(0,1,y,x));
-                    Image.putScalar(new int[]{0,1,y,x},ImageWithMask.getDouble(0,2,y,x));
-                    Image.putScalar(new int[]{0,2,y,x},ImageWithMask.getDouble(0,3,y,x));
+                if (Mask.getDouble(0,0,y,x) == 0.0D){
+                    OImage.putScalar(new int[]{0,0,y,x},IImage.getDouble(0,0,y,x));
+                    OImage.putScalar(new int[]{0,1,y,x},IImage.getDouble(0,1,y,x));
+                    OImage.putScalar(new int[]{0,2,y,x},IImage.getDouble(0,2,y,x));
                 }
             }
         }
-        return Image;
+        return OImage;
     }
 
     public ImageMemoryDataSetIterator prepareInMemoryData(){

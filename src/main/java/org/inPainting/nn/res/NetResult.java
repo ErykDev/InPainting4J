@@ -1,9 +1,9 @@
 package org.inPainting.nn.res;
 
-import javafx.scene.image.WritableImage;
 import lombok.Getter;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.inPainting.utils.ImageLoader;
+
 
 public class NetResult {
     @Getter
@@ -19,21 +19,19 @@ public class NetResult {
         this.fakeScore = netOutput[0].getDouble(0);
     }
 
-    public INDArray mergeByMask(INDArray inputWithMask, int width, int height){
+    public INDArray mergeByMask(INDArray input, INDArray mask, int width, int height){
         return ImageLoader.mergeImagesByMask(
-                inputWithMask,
+                input,
+                mask,
                 this.outputPicture,
                 width,
                 height
         );
     }
 
-    public WritableImage drawPicture(int width, int height, ImageLoader imageLoader) {
-        return imageLoader.drawImage(this.outputPicture, width, height);
-    }
-
     @Override
     protected void finalize() throws Throwable {
         outputPicture.close();
+        outputPicture = null;
     }
 }

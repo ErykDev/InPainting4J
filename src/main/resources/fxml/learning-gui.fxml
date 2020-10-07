@@ -21,6 +21,6 @@
         <fx:include source="custom-learning-gui.fxml" />
     </center>
     <right>
-        <CheckBox fx:id="trainD" mnemonicParsing="false" text="TrainD" BorderPane.alignment="CENTER" />
+        <CheckBox fx:id="TrainD" mnemonicParsing="false" text="TrainD" BorderPane.alignment="CENTER" />
     </right>
 </BorderPane>
