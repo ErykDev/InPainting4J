@@ -55,6 +55,11 @@ public class NeuralNetwork {
                 //m + rgb 256x256x4x1
                 .setInputTypes(InputType.convolutional(256,256,3),InputType.convolutional(256,256,1))
 
+                //Merging Input with mask
+                .addVertex("InputGENmerge0",
+                        new MergeVertex(),
+                        "Input","Mask")
+
                 //Generator
                 //Encoder 256x256x4 -> 128x128x16
                 .addLayer("GENCNN1",
@@ -64,7 +69,7 @@ public class NeuralNetwork {
                                 doubleStride,
                                 doubleKernel,
                                 Activation.LEAKYRELU),
-                        "Input","Mask")
+                        "InputGENmerge0")
                 //Encoder 128x128x16 -> 64x64x64
                 .addLayer("GENCNN2",
                         convInitSame(

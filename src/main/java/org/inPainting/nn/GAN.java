@@ -226,6 +226,11 @@ public class GAN {
 
                 //Generator
                 //Encoder 256x256x4 -> 128x128x16
+                //Merging Input with mask
+                .addVertex("InputGENmerge0",
+                        new MergeVertex(),
+                        "Input","Mask")
+
                 .addLayer("GENCNN1",
                         convInitSame(
                                 ((inputChannels)),
@@ -233,7 +238,7 @@ public class GAN {
                                 doubleStride,
                                 doubleKernel,
                                 Activation.LEAKYRELU),
-                        "Input", "Mask")
+                        "InputGENmerge0")
                 //Encoder 128x128x16 -> 64x64x64
                 .addLayer("GENCNN2",
                         convInitSame(
@@ -326,6 +331,7 @@ public class GAN {
                         reshape(_MergedNetInputShape[0], _MergedNetInputShape[1]*4, _MergedNetInputShape[2]/2, _MergedNetInputShape[3]/2),
                         "GENCNN8")
 
+
                 //Merging Decoder with Input
                 .addVertex("GENmerge4",
                         new MergeVertex(),
@@ -341,10 +347,11 @@ public class GAN {
                 .addVertex("GENRV5",
                         reshape(_MergedNetInputShape[0], _MergedNetInputShape[1], _MergedNetInputShape[2], _MergedNetInputShape[3]),
                         "GENCNN9")
+
                 //Merging Decoder with Input
                 .addVertex("GENmerge5",
                         new MergeVertex(),
-                        "Input","Mask","GENRV5")
+                        "InputGENmerge0","GENRV5")
                 //Decoder 256x256x4
                 .addLayer("GENCNN10",
                         convInitSame(
