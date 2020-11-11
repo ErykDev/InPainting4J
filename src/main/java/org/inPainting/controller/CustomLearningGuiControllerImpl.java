@@ -29,7 +29,7 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
     private ImageFileDataSetIterator trainDataSet;
 
-    private ImageLoader imageLoader = new ImageLoader(GAN._MergedNetInputShape);
+    private ImageLoader imageLoader = new ImageLoader();
 
     private NetResult tempOutput;
 

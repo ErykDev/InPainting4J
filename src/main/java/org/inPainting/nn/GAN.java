@@ -22,6 +22,7 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.inPainting.nn.res.NetResult;
 import org.inPainting.utils.ImageLoader;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -56,7 +57,7 @@ public class GAN {
     protected WorkspaceMode inferenceWorkspaceMode;
     protected CacheMode cacheMode;
     protected long seed;
-    protected ImageLoader imageLoader = new ImageLoader(GAN._MergedNetInputShape);
+    protected ImageLoader imageLoader = new ImageLoader();
 
 
     public GAN(Builder builder) {
@@ -144,15 +145,22 @@ public class GAN {
                     Outputs.FAKE()
             });
 
-            for (int i = 0; i < 3; i++)
-                discriminator.fit(fakeSet);
+            MultiDataSet fakeSetInput = new MultiDataSet(
+                    new INDArray[]{
+                            next.getFeatures()[0], //input
+                            next.getFeatures()[1] //mask
+                    },new INDArray[]{
+                    Outputs.FAKE()
+            });
+
+            discriminator.fit(fakeSet);
             for (int i = 0; i < 2; i++)
                 discriminator.fit(realSet);
-
-
+            discriminator.fit(fakeSetInput);
 
             realSet.detach();
             fakeSet.detach();
+            fakeSetInput.detach();
         }
 
         // Generate a new set of adversarial examples and try to mislead the discriminator.

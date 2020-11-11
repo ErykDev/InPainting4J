@@ -44,13 +44,11 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
     private Image tempI1;
     private Image tempI2;
 
-    @Getter
-    private int maxSize;
 
     public ImageFileDataSetIterator(int IterationsPerPicture, FileEntry[] fileEntries){
         this.iterationsPerPicture = IterationsPerPicture;
         this.fileEntries = fileEntries;
-        this.maxSize = (fileEntries.length - 1) * IterationsPerPicture;
+        super.maxSize = (fileEntries.length - 1) * IterationsPerPicture;
         this.r = new Random();
 
         this.initFirstSet();
@@ -60,7 +58,7 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
     public ImageFileDataSetIterator(FileEntry[] fileEntries){
         this.fileEntries = fileEntries;
-        this.maxSize = (fileEntries.length - 1) * iterationsPerPicture;
+        super.maxSize = (fileEntries.length - 1) * iterationsPerPicture;
         this.r = new Random();
 
         this.initFirstSet();
@@ -70,7 +68,7 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
     public ImageFileDataSetIterator(FileEntry[] fileEntries, int seed){
         this.fileEntries = fileEntries;
-        this.maxSize = (fileEntries.length - 1) * iterationsPerPicture;
+        super.maxSize = (fileEntries.length - 1) * iterationsPerPicture;
         this.r = new Random(seed);
 
         this.initFirstSet();
@@ -158,7 +156,8 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
     }
 
 
-    private INDArray convertToRank4INDArrayInput(Image inputImage) {
+    @Override
+    protected INDArray convertToRank4INDArrayInput(Image inputImage) {
 
         assert inputImage != null;
 
@@ -190,7 +189,8 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
         return temp0;
     }
 
-    private INDArray convertToRank4INDArrayMask(Image maskImage) {
+    @Override
+    protected INDArray convertToRank4INDArrayMask(Image maskImage) {
 
         int width = (int) maskImage.getWidth();
         int height = (int) maskImage.getHeight();
@@ -210,7 +210,8 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
         return temp0;
     }
 
-    private INDArray convertToRank4INDArrayOutput(Image inputImage) {
+    @Override
+    protected INDArray convertToRank4INDArrayOutput(Image inputImage) {
 
         assert inputImage != null;
         assert inputImage.getHeight() <= GAN._MergedNetInputShape[2];
@@ -239,7 +240,8 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
         return temp0;
     }
 
-    private MultiDataSet convertToDataSet(FileEntry fileEntry) throws IOException {
+    @Override
+    protected MultiDataSet convertToDataSet(FileEntry fileEntry) throws IOException {
 
         inputImageFileInputStream = new FileInputStream(fileEntry.getInput());
         expectedImageImageFileInputStream = new FileInputStream(fileEntry.getOutput());
@@ -274,32 +276,5 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
             preProcessor.preProcess(result);
         }
         return result;
-    }
-
-    private double scaleColor(double value) {
-        return (value);
-    }
-
-    public static class FileEntry {
-
-        @Getter
-        private File input;
-        @Getter
-        private File output;
-        @Getter
-        private File mask;
-
-        public FileEntry(File input, File output, File mask){
-            this.input = input;
-            this.output = output;
-            this.mask = mask;
-        }
-
-        @Override
-        protected void finalize() throws Throwable {
-            input = null;
-            output = null;
-            mask = null;
-        }
     }
 }
