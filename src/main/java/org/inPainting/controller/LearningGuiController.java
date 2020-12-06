@@ -12,10 +12,10 @@ import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
 import org.deeplearning4j.optimize.listeners.PerformanceListener;
+import org.inPainting.nn.NeuralNetwork;
 import org.nd4j.linalg.learning.config.Adam;
 import org.inPainting.component.UIServerComponent;
 import org.inPainting.nn.GAN;
-import org.inPainting.nn.NeuralNetwork;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

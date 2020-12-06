@@ -49,7 +49,7 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
         outputImageView.setImage(imageLoader.drawImage(tempOutput.mergeByMask(multiDataSet.getFeatures()[0],multiDataSet.getFeatures()[1], width, height), width, height));
         realImageView.setImage(imageLoader.drawImage(multiDataSet.getLabels()[0], width, height));
 
-        log.info("Refreshing GUI; Result Score: " + tempOutput.getRealScore()+";");
+        log.info("Refreshing GUI; Result Score: " + tempOutput.getRealScore()+"; Fake Score: "+tempOutput.getFakeScore()+";");
 
         tempOutput = null;
         System.gc();
