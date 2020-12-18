@@ -10,12 +10,15 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
+import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
 import org.deeplearning4j.optimize.listeners.PerformanceListener;
-import org.inPainting.nn.NeuralNetwork;
+import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.learning.config.Adam;
+import org.nd4j.linalg.learning.config.Sgd;
 import org.inPainting.component.UIServerComponent;
 import org.inPainting.nn.GAN;
+import org.inPainting.nn.NeuralNetwork;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -62,7 +65,7 @@ public class LearningGuiController {
 
         if (new File("gan.zip").exists() && new File("discriminator.zip").exists()){
             try {
-                gan =  new GAN(NeuralNetwork.loadNetworkGraph(new File("discriminator.zip")), NeuralNetwork.loadNetworkGraph(new File("gan.zip")));
+                gan =  new GAN(MultiLayerNetwork.load(new File("discriminator.zip"),true), NeuralNetwork.loadNetworkGraph(new File("gan.zip")));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -70,7 +73,7 @@ public class LearningGuiController {
             gan = new GAN.Builder().discriminator(updater -> {
                 try {
                     log.info("Loading Discriminator");
-                    return NeuralNetwork.loadNetworkGraph(new File("discriminator.zip"));
+                    return MultiLayerNetwork.load(new File("discriminator.zip"),true);
                 } catch (IOException e) {
                     log.error("Error while loading discriminator network creating new one");
                     return NeuralNetwork.getDiscriminator();
@@ -80,6 +83,10 @@ public class LearningGuiController {
                     .beta1(GAN.LEARNING_BETA1).build())
                     .build();
 
+        log.info("Discriminator");
+        log.info(gan.getDiscriminator().summary());
+
+        log.info("GAN");
         log.info(gan.getNetwork().summary());
 
         customLearningGuiController.onSetNeuralNetwork(gan);
@@ -89,7 +96,6 @@ public class LearningGuiController {
         uiServerComponent.reinitialize(gan.getNetwork());
         gan.setDiscriminatorListeners(new BaseTrainingListener[]{new PerformanceListener(100, true)});
         //gan.setGanListeners(new BaseTrainingListener[]{new ScoreIterationListener(1000)});
-
 
         counterProperty.addListener(new ChangeListener<Number>() {
             @Override
@@ -103,7 +109,7 @@ public class LearningGuiController {
     public void loadAction(ActionEvent actionEvent) {
         if (new File("gan.zip").exists() && new File("discriminator.zip").exists()){
             try {
-                gan =  new GAN(NeuralNetwork.loadNetworkGraph(new File("discriminator.zip")), NeuralNetwork.loadNetworkGraph(new File("gan.zip")));
+                gan =  new GAN(MultiLayerNetwork.load(new File("discriminator.zip"),true), NeuralNetwork.loadNetworkGraph(new File("gan.zip")));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -111,7 +117,7 @@ public class LearningGuiController {
             gan = new GAN.Builder().discriminator(updater -> {
                 try {
                     log.info("Loading Discriminator");
-                    return NeuralNetwork.loadNetworkGraph(new File("discriminator.zip"));
+                    return MultiLayerNetwork.load(new File("discriminator.zip"),true);
                 } catch (IOException e) {
                     log.error("Error while loading discriminator network creating new one");
                     return NeuralNetwork.getDiscriminator();
@@ -119,8 +125,8 @@ public class LearningGuiController {
             }).updater(Adam.builder()
                     .learningRate(GAN.LEARNING_RATE)
                     .beta1(GAN.LEARNING_BETA1)
-                    .build()
-            ).build();
+                    .build())
+                    .build();
 
         customLearningGuiController.onSetNeuralNetwork(gan);
         customLearningGuiController.onInitialize();
@@ -134,7 +140,11 @@ public class LearningGuiController {
 
     public void saveAction(ActionEvent actionEvent) {
         NeuralNetwork.saveNetworkGraph(gan.getNetwork(), new File("gan.zip"));
-        NeuralNetwork.saveNetworkGraph(gan.getDiscriminator(), new File("discriminator.zip"));
+        try {
+            ModelSerializer.writeModel(gan.getDiscriminator(), new File("discriminator.zip"),true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         showAlert(Alert.AlertType.INFORMATION, "Success", "Neural network successfully saved");
     }
@@ -175,5 +185,4 @@ public class LearningGuiController {
         alert.setContentText(content);
         alert.showAndWait();
     }
-
 }

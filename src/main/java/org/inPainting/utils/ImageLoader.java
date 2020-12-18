@@ -14,14 +14,6 @@ public final class ImageLoader {
 
     private WritableImage writableTemp;
 
-    //private int[] netInputShape = {1,4,256,256};
-
-    // public ImageLoader(int... neuralNetworkInputShape) {
-    //    assert neuralNetworkInputShape.length == 4;
-
-    //this.netInputShape = neuralNetworkInputShape;
-    //}
-
     public WritableImage emptyImage(Color color, int width, int height) {
 
         writableTemp = new WritableImage(width, height);
