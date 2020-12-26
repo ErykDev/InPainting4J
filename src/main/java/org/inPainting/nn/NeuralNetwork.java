@@ -16,7 +16,9 @@ import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
-import org.inPainting.nn.entry.*;
+import org.inPainting.nn.entry.LEntry;
+import org.inPainting.nn.entry.LayerEntry;
+import org.inPainting.nn.entry.VertexEntry;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,7 +51,6 @@ public class NeuralNetwork {
         int[] doubleStride = {2,2};
         int[] noStride = {1,1};
 
-
         return new LEntry[]{
                 new VertexEntry("InputGENmerge0", new MergeVertex(), "Input","Mask"),
                 new LayerEntry("GENCNN1",
@@ -60,7 +61,6 @@ public class NeuralNetwork {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "InputGENmerge0"),
-
                 new LayerEntry("GENCNN2",
                         convInitSame(
                                 (inputChannels*4),
@@ -69,7 +69,6 @@ public class NeuralNetwork {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "GENCNN1"),
-
                 new LayerEntry("GENCNN3",
                         convInitSame(
                                 (inputChannels*16),
@@ -78,7 +77,6 @@ public class NeuralNetwork {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "GENCNN2"),
-
                 new LayerEntry("GENCNN4",
                         convInitSame(
                                 (inputChannels*64),
@@ -87,8 +85,6 @@ public class NeuralNetwork {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "GENCNN3"),
-
-                //Encoder 16x16x1024 -> 8x8x4096
                 new LayerEntry("GENCNN5",
                         convInitSame(
                                 (inputChannels*256),
@@ -97,6 +93,7 @@ public class NeuralNetwork {
                                 doubleKernel,
                                 Activation.LEAKYRELU),
                         "GENCNN4"),
+
                 //Decoder Vertex 8x8x4096 -> 16x16x1024
                 new VertexEntry("GENRV1",
                         reshape(_MergedNetInputShape[0],_MergedNetInputShape[1]*256,_MergedNetInputShape[2]/16,_MergedNetInputShape[3]/16),
@@ -271,10 +268,11 @@ public class NeuralNetwork {
         };
     }
 
+
     public static MultiLayerNetwork getDiscriminator() {
         NeuralNetConfiguration.ListBuilder builder = new NeuralNetConfiguration.Builder()
                 .weightInit(new NormalDistribution(0.0,0.01))
-                .updater(new Nesterovs(0.01,0.9))
+                .updater(new Nesterovs(0.02,0.9))
                 .biasUpdater(new Nesterovs(2e-2,0.9))
                 .gradientNormalization(GradientNormalization.RenormalizeL2PerLayer)
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)

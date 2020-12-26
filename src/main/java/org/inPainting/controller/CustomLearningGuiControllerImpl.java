@@ -98,7 +98,7 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
         } else
             gan.fit(trainDataSet.next(), false);
     }
-
+    
     @Override
     public void onTestAction() {
         this.onRefreshGUI();
