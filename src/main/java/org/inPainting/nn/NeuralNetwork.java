@@ -59,7 +59,7 @@ public class NeuralNetwork {
                                 ((inputChannels*4)),
                                 doubleStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "InputGENmerge0"),
                 new LayerEntry("GENCNN2",
                         convInitSame(
@@ -67,7 +67,7 @@ public class NeuralNetwork {
                                 (inputChannels*16),
                                 doubleStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENCNN1"),
                 new LayerEntry("GENCNN3",
                         convInitSame(
@@ -75,7 +75,7 @@ public class NeuralNetwork {
                                 (inputChannels*64),
                                 doubleStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENCNN2"),
                 new LayerEntry("GENCNN4",
                         convInitSame(
@@ -83,7 +83,7 @@ public class NeuralNetwork {
                                 (inputChannels*256),
                                 doubleStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENCNN3"),
                 new LayerEntry("GENCNN5",
                         convInitSame(
@@ -91,7 +91,7 @@ public class NeuralNetwork {
                                 (inputChannels*1024),
                                 doubleStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENCNN4"),
 
                 //Decoder Vertex 8x8x4096 -> 16x16x1024
@@ -109,7 +109,7 @@ public class NeuralNetwork {
                                 (inputChannels*256),
                                 noStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENmerge1"),
                 //Decoder Vertex 16x16x1024 -> 32x32x256x1
                 new VertexEntry("GENRV2",
@@ -127,7 +127,7 @@ public class NeuralNetwork {
                                 (inputChannels*64),
                                 noStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENmerge2"),
                 //Decoder Vertex 32x32x256 -> 64x64x64
                 new VertexEntry("GENRV3",
@@ -145,7 +145,7 @@ public class NeuralNetwork {
                                 (inputChannels*16),
                                 noStride,
                                 doubleKernel,
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENmerge3"),
                 //Decoder Vertex 64x64x64x1 -> 128x128x*16
                 new VertexEntry("GENRV4",
@@ -162,7 +162,7 @@ public class NeuralNetwork {
                         convInitSame(
                                 (inputChannels*4*2),
                                 (inputChannels*4),
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENmerge4"),
                 //Decoder Vertex 128x128x*16 -> 256x256x4
                 new VertexEntry("GENRV5",
@@ -179,7 +179,7 @@ public class NeuralNetwork {
                         convInitSame(
                                 (inputChannels*2),
                                 (outputChannels),
-                                Activation.LEAKYRELU),
+                                Activation.RELU),
                         "GENmerge5"),
 
                 new LayerEntry("GENCNNLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
@@ -282,14 +282,9 @@ public class NeuralNetwork {
                 .list()
                 .setInputType(InputType.convolutional(256,256,3));
 
-        //.addInputs("Input","Mask")
-        //m + rgb 256x256x4x1
-        //.setInputType(InputType.convolutional(256,256,3));
-
-        for (int i = 0; i < discriminatorLayers().length; i++)
-            builder.layer(i, ((LayerEntry)discriminatorLayers()[i]).getLayer());
-
-
+                for (int i = 0; i < discriminatorLayers().length; i++)
+                     builder.layer(i, ((LayerEntry)discriminatorLayers()[i]).getLayer());
+                
         return new MultiLayerNetwork(builder.build());
     }
 }

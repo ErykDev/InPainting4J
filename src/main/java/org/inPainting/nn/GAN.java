@@ -219,7 +219,7 @@ public class GAN {
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
                 .updater(updater)
-                .l1(5* 1E-4)
+                //.l1(5* 1E-4)
                 .graphBuilder()
                 .allowDisconnected(true)
                 .addInputs("Input", "Mask")
