@@ -168,6 +168,9 @@ public class GAN {
             fakeSetOutput.detach();
             realSet.detach();
             //fakeSetInput.detach();
+
+            // Update the discriminator in the Pix2PixGAN network
+            updateGanWithDiscriminator();
         }
 
         // Generate a new set of adversarial examples and try to mislead the discriminator.
@@ -194,9 +197,6 @@ public class GAN {
                         next.getLabels()[0]
                 })
         );
-
-        // Update the discriminator in the Pix2PixGAN network
-        updateGanWithDiscriminator();
     }
 
     private void defineGan() {
