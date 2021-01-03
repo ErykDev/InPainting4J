@@ -9,12 +9,10 @@ import org.deeplearning4j.nn.conf.distribution.NormalDistribution;
 import org.deeplearning4j.nn.conf.graph.MergeVertex;
 import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.*;
+import org.deeplearning4j.nn.conf.layers.misc.FrozenLayerWithBackprop;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
-import org.inPainting.nn.entry.*;
-import org.inPainting.nn.res.NetResult;
-import org.inPainting.utils.ImageLoader;
 import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -24,27 +22,29 @@ import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.*;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
+import org.inPainting.nn.entry.LEntry;
+import org.inPainting.nn.entry.LayerEntry;
+import org.inPainting.nn.entry.VertexEntry;
+import org.inPainting.nn.res.NetResult;
+import org.inPainting.utils.ImageLoader;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Supplier;
 
+import static org.inPainting.utils.LayerUtils.*;
 
 public class GAN {
-    private static final IUpdater UPDATER_ZERO = Sgd.builder().learningRate(0.00).build();
 
     public static final double LEARNING_RATE = 2E-4;
     public static final double LEARNING_BETA1 = 5E-1;
     public static final double LEARNING_LAMBDA = 10E+1;
     public static final int[] _MergedNetInputShape = {1,4,256,256};
 
-    public interface DiscriminatorProvider {
-        MultiLayerNetwork provide(IUpdater updater);
-    }
 
     protected Supplier<ComputationGraph> generatorSupplier;
-    protected DiscriminatorProvider discriminatorSupplier;
+    protected Supplier<MultiLayerNetwork> discriminatorSupplier;
 
     @Getter
     protected MultiLayerNetwork discriminator;
@@ -200,10 +200,10 @@ public class GAN {
     }
 
     private void defineGan() {
-        discriminator = discriminatorSupplier.provide(updater);
+        discriminator = discriminatorSupplier.get();
         discriminator.init();
 
-        MultiLayerNetwork ganDiscriminator = discriminatorSupplier.provide(UPDATER_ZERO);
+        MultiLayerNetwork ganDiscriminator = discriminatorSupplier.get();
         ganDiscriminator.init();
 
         network = NET(updater);
@@ -258,14 +258,13 @@ public class GAN {
         //Changing first inputs os first layer of discriminator
         graphBuilder.addLayer(
                 DislEntry[0].getLayerName(),
-                ((LayerEntry)DislEntry[0]).getLayer(),
+                new FrozenLayerWithBackprop(((LayerEntry)DislEntry[0]).getLayer()),
                 GenlEntry[GenlEntry.length - 2].getLayerName());
 
         for (int i = 1; i < DislEntry.length; i++) {
-
             graphBuilder.addLayer(
                     DislEntry[i].getLayerName(),
-                    ((LayerEntry) DislEntry[i]).getLayer(),
+                    new FrozenLayerWithBackprop(((LayerEntry) DislEntry[i]).getLayer()),
                     DislEntry[i].getInputs()
             );
         }
@@ -292,7 +291,7 @@ public class GAN {
      */
     public static class Builder implements Cloneable {
         protected Supplier<ComputationGraph> generator;
-        protected DiscriminatorProvider discriminator;
+        protected Supplier<MultiLayerNetwork> discriminator;
 
         protected IUpdater iUpdater = new Sgd();
         protected IUpdater biasUpdater = null;
@@ -314,7 +313,7 @@ public class GAN {
          * @param discriminator MultilayerNetwork
          * @return Builder
          */
-        public GAN.Builder discriminator(DiscriminatorProvider discriminator) {
+        public GAN.Builder discriminator(Supplier<MultiLayerNetwork> discriminator) {
             this.discriminator = discriminator;
             return this;
         }

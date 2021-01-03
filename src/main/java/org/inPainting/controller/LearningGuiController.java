@@ -70,7 +70,7 @@ public class LearningGuiController {
                 e.printStackTrace();
             }
         } else
-            gan = new GAN.Builder().discriminator(updater -> {
+            gan = new GAN.Builder().discriminator(() -> {
                 try {
                     log.info("Loading Discriminator");
                     return MultiLayerNetwork.load(new File("discriminator.zip"),true);
@@ -114,7 +114,7 @@ public class LearningGuiController {
                 e.printStackTrace();
             }
         } else
-            gan = new GAN.Builder().discriminator(updater -> {
+            gan = new GAN.Builder().discriminator(() -> {
                 try {
                     log.info("Loading Discriminator");
                     return MultiLayerNetwork.load(new File("discriminator.zip"),true);
