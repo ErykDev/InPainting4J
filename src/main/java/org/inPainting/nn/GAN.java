@@ -2,38 +2,29 @@ package org.inPainting.nn;
 
 import javafx.scene.image.WritableImage;
 import lombok.Getter;
-import org.deeplearning4j.nn.api.Layer;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.*;
-import org.deeplearning4j.nn.conf.distribution.NormalDistribution;
-import org.deeplearning4j.nn.conf.graph.MergeVertex;
 import org.deeplearning4j.nn.conf.inputs.InputType;
-import org.deeplearning4j.nn.conf.layers.*;
 import org.deeplearning4j.nn.conf.layers.misc.FrozenLayerWithBackprop;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
-import org.nd4j.evaluation.classification.Evaluation;
-import org.nd4j.linalg.activations.Activation;
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.MultiDataSet;
-import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
-import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
-import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.learning.config.*;
-import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.inPainting.nn.entry.LEntry;
 import org.inPainting.nn.entry.LayerEntry;
 import org.inPainting.nn.entry.VertexEntry;
 import org.inPainting.nn.res.NetResult;
 import org.inPainting.utils.ImageLoader;
+import org.nd4j.evaluation.classification.Evaluation;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.MultiDataSet;
+import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
+import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
+import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.learning.config.IUpdater;
+import org.nd4j.linalg.learning.config.Sgd;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 import java.util.function.Supplier;
-
-import static org.inPainting.utils.LayerUtils.*;
 
 public class GAN {
 
@@ -51,7 +42,7 @@ public class GAN {
     @Getter
     protected ComputationGraph network;
 
-    protected IUpdater updater = new Adam(LEARNING_RATE);
+    protected IUpdater updater = new Sgd(LEARNING_RATE);
     protected IUpdater biasUpdater;
     protected OptimizationAlgorithm optimizer;
     protected GradientNormalization gradientNormalizer;

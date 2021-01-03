@@ -247,7 +247,6 @@ public class NeuralNetwork {
                 new LayerEntry("DISFFN1", new DenseLayer.Builder()
                         .weightInit(new NormalDistribution(0, 0.005))
                         .activation(Activation.RELU)
-
                         .nOut(4096)
                         .biasInit(nonZeroBias)
                         .build(),"DISSL3"),
