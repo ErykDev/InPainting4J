@@ -65,7 +65,7 @@ public class LearningGuiController {
 
         if (new File("gan.zip").exists() && new File("discriminator.zip").exists()){
             try {
-                gan =  new GAN(MultiLayerNetwork.load(new File("discriminator.zip"),true), NeuralNetwork.loadNetworkGraph(new File("gan.zip")));
+                gan =  new GAN(NeuralNetwork.loadNetworkGraph(new File("discriminator.zip")), NeuralNetwork.loadNetworkGraph(new File("gan.zip")));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -73,7 +73,7 @@ public class LearningGuiController {
             gan = new GAN.Builder().discriminator(() -> {
                 try {
                     log.info("Loading Discriminator");
-                    return MultiLayerNetwork.load(new File("discriminator.zip"),true);
+                    return NeuralNetwork.loadNetworkGraph(new File("discriminator.zip"));
                 } catch (IOException e) {
                     log.error("Error while loading discriminator network creating new one");
                     return NeuralNetwork.getDiscriminator();
@@ -109,7 +109,7 @@ public class LearningGuiController {
     public void loadAction(ActionEvent actionEvent) {
         if (new File("gan.zip").exists() && new File("discriminator.zip").exists()){
             try {
-                gan =  new GAN(MultiLayerNetwork.load(new File("discriminator.zip"),true), NeuralNetwork.loadNetworkGraph(new File("gan.zip")));
+                gan =  new GAN(NeuralNetwork.loadNetworkGraph(new File("discriminator.zip")), NeuralNetwork.loadNetworkGraph(new File("gan.zip")));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -117,7 +117,7 @@ public class LearningGuiController {
             gan = new GAN.Builder().discriminator(() -> {
                 try {
                     log.info("Loading Discriminator");
-                    return MultiLayerNetwork.load(new File("discriminator.zip"),true);
+                    return NeuralNetwork.loadNetworkGraph(new File("discriminator.zip"));
                 } catch (IOException e) {
                     log.error("Error while loading discriminator network creating new one");
                     return NeuralNetwork.getDiscriminator();

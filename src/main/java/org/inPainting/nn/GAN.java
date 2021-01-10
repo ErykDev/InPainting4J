@@ -9,11 +9,6 @@ import org.deeplearning4j.nn.conf.layers.misc.FrozenLayerWithBackprop;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
-import org.inPainting.nn.entry.LEntry;
-import org.inPainting.nn.entry.LayerEntry;
-import org.inPainting.nn.entry.VertexEntry;
-import org.inPainting.nn.res.NetResult;
-import org.inPainting.utils.ImageLoader;
 import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
@@ -22,6 +17,11 @@ import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.learning.config.Sgd;
+import org.inPainting.nn.entry.LEntry;
+import org.inPainting.nn.entry.LayerEntry;
+import org.inPainting.nn.entry.VertexEntry;
+import org.inPainting.nn.res.NetResult;
+import org.inPainting.utils.ImageLoader;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -35,10 +35,10 @@ public class GAN {
 
 
     protected Supplier<ComputationGraph> generatorSupplier;
-    protected Supplier<MultiLayerNetwork> discriminatorSupplier;
+    protected Supplier<ComputationGraph> discriminatorSupplier;
 
     @Getter
-    protected MultiLayerNetwork discriminator;
+    protected ComputationGraph discriminator;
     @Getter
     protected ComputationGraph network;
 
@@ -71,7 +71,7 @@ public class GAN {
         this.defineGan();
     }
 
-    public GAN(MultiLayerNetwork discriminator, ComputationGraph gan) {
+    public GAN(ComputationGraph discriminator, ComputationGraph gan) {
         this.network = gan;
         this.discriminator = discriminator;
     }
@@ -127,7 +127,7 @@ public class GAN {
             MultiDataSet fakeSetOutput = new MultiDataSet(
                     new INDArray[]{
                             ganOutput[1], //gan output
-                            //next.getFeatures()[1] //mask
+                            next.getFeatures()[1] //mask
                     },new INDArray[]{
                     Outputs.FAKE()
             });
@@ -135,7 +135,7 @@ public class GAN {
             MultiDataSet realSet = new MultiDataSet(
                     new INDArray[]{
                             next.getLabels()[0], //expected output
-                            //next.getFeatures()[1] //mask
+                            next.getFeatures()[1] //mask
                     },new INDArray[]{
                     Outputs.REAL()
             });
@@ -159,6 +159,7 @@ public class GAN {
             fakeSetOutput.detach();
             realSet.detach();
             //fakeSetInput.detach();
+
 
             // Update the discriminator in the Pix2PixGAN network
             updateGanWithDiscriminator();
@@ -194,7 +195,7 @@ public class GAN {
         discriminator = discriminatorSupplier.get();
         discriminator.init();
 
-        MultiLayerNetwork ganDiscriminator = discriminatorSupplier.get();
+        ComputationGraph ganDiscriminator = discriminatorSupplier.get();
         ganDiscriminator.init();
 
         network = NET(updater);
@@ -209,8 +210,9 @@ public class GAN {
         int maskChannels = 1;
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
+                .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
                 .updater(updater)
-                //.l1(5* 1E-4)
+                .miniBatch(true)
                 .graphBuilder()
                 .allowDisconnected(true)
                 .addInputs("Input", "Mask")
@@ -246,11 +248,11 @@ public class GAN {
         //Discriminator layers
         LEntry[] DislEntry = NeuralNetwork.discriminatorLayers();
 
-        //Changing first inputs os first layer of discriminator
-        graphBuilder.addLayer(
+        //Changing first inputs of first Vertex of discriminator
+        graphBuilder.addVertex(
                 DislEntry[0].getLayerName(),
-                new FrozenLayerWithBackprop(((LayerEntry)DislEntry[0]).getLayer()),
-                GenlEntry[GenlEntry.length - 2].getLayerName());
+                ((VertexEntry)DislEntry[0]).getVertex(),
+                GenlEntry[GenlEntry.length - 2].getLayerName(), "Mask");
 
         for (int i = 1; i < DislEntry.length; i++) {
             graphBuilder.addLayer(
@@ -282,7 +284,7 @@ public class GAN {
      */
     public static class Builder implements Cloneable {
         protected Supplier<ComputationGraph> generator;
-        protected Supplier<MultiLayerNetwork> discriminator;
+        protected Supplier<ComputationGraph> discriminator;
 
         protected IUpdater iUpdater = new Sgd();
         protected IUpdater biasUpdater = null;
@@ -304,7 +306,7 @@ public class GAN {
          * @param discriminator MultilayerNetwork
          * @return Builder
          */
-        public GAN.Builder discriminator(Supplier<MultiLayerNetwork> discriminator) {
+        public GAN.Builder discriminator(Supplier<ComputationGraph> discriminator) {
             this.discriminator = discriminator;
             return this;
         }

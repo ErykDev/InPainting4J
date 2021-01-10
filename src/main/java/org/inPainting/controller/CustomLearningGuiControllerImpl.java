@@ -6,6 +6,7 @@ import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.dataset.MultiDataSet;
+import org.inPainting.nn.data.ImageDataSetIterator;
 import org.inPainting.nn.data.ImageFileDataSetIterator;
 import org.inPainting.nn.GAN;
 import org.inPainting.nn.res.NetResult;
@@ -27,7 +28,7 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
     private GAN gan;
 
-    private ImageFileDataSetIterator trainDataSet;
+    private ImageDataSetIterator trainDataSet;
 
     private ImageLoader imageLoader = new ImageLoader();
 
@@ -49,7 +50,7 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
         outputImageView.setImage(imageLoader.drawImage(tempOutput.mergeByMask(multiDataSet.getFeatures()[0],multiDataSet.getFeatures()[1], width, height), width, height));
         realImageView.setImage(imageLoader.drawImage(multiDataSet.getLabels()[0], width, height));
 
-        log.info("Refreshing GUI; Result Score: " + tempOutput.getRealScore()+"; Fake Score: "+tempOutput.getFakeScore()+";");
+        log.info("Refreshing GUI; Result Score: " + tempOutput.getRealScore()+";"+ " Fake Score: "+tempOutput.getFakeScore());
 
         tempOutput = null;
         System.gc();
@@ -75,7 +76,8 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
     @Override
     public void onTrainLoop(long loopNo, boolean t) {
-        if (loopNo % (trainDataSet.getMaxSize()*2) == 0 && loopNo != 0){
+
+        if (loopNo % (trainDataSet.getMaxSize()*2) == 0){
             try {
                 ModelSerializer.writeModel(gan.getDiscriminator(), new File("discriminator.zip"),true);
                 ModelSerializer.writeModel(gan.getNetwork(), new File("gan.zip"),true);
@@ -86,19 +88,20 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
             log.info("Saving model loopNo="+loopNo);
         }
 
+
         if (!trainDataSet.hasNext()) {
             log.info("Resetting ImageDataSetIterator");
             trainDataSet.reset();
             System.gc();
         }
 
-        if (loopNo % 9 == 0 && loopNo != 0) {
+        if (loopNo % 4 == 0 && loopNo != 0) {
             gan.fit(trainDataSet.next(), t);
             System.gc();
         } else
             gan.fit(trainDataSet.next(), false);
     }
-    
+
     @Override
     public void onTestAction() {
         this.onRefreshGUI();
