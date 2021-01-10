@@ -47,7 +47,9 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
         tempOutput = gan.getOutput(multiDataSet.getFeatures()[0],multiDataSet.getFeatures()[1]);
 
-        outputImageView.setImage(imageLoader.drawImage(tempOutput.mergeByMask(multiDataSet.getFeatures()[0],multiDataSet.getFeatures()[1], width, height), width, height));
+        //outputImageView.setImage(imageLoader.drawImage(tempOutput.mergeByMask(multiDataSet.getFeatures()[0],multiDataSet.getFeatures()[1], width, height), width, height));
+
+        outputImageView.setImage(imageLoader.drawImage(tempOutput.getOutputPicture(), width, height));
         realImageView.setImage(imageLoader.drawImage(multiDataSet.getLabels()[0], width, height));
 
         log.info("Refreshing GUI; Result Score: " + tempOutput.getRealScore()+";"+ " Fake Score: "+tempOutput.getFakeScore());
