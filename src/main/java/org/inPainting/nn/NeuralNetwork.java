@@ -26,7 +26,6 @@ import org.inPainting.nn.entry.VertexEntry;
 import java.io.File;
 import java.io.IOException;
 
-
 public class NeuralNetwork {
 
     public static void saveNetworkGraph(ComputationGraph neuralNetwork, File file) {
@@ -166,7 +165,7 @@ public class NeuralNetwork {
                 new VertexEntry("merge2", new MergeVertex(), "Input","Mask"),
 
                 // #C64
-                new LayerEntry("DISCNN1", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
+                new LayerEntry("conv11", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
                         .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
                         .convolutionMode(ConvolutionMode.Same)
                         .activation(Activation.LEAKYRELU)
@@ -176,70 +175,72 @@ public class NeuralNetwork {
                         "merge2"),
 
                 // #C128
-                new LayerEntry("DISCNN2", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
+                new LayerEntry("conv12", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
                         .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
                         .convolutionMode(ConvolutionMode.Same)
                         .activation(Activation.LEAKYRELU)
                         .nOut(128)
-                        .build(),"DISCNN1"),
-                new LayerEntry("DISLRN2", new LocalResponseNormalization.Builder().build(),"DISCNN2"),
+                        .build(),"conv11"),
+                new LayerEntry("lrn1", new LocalResponseNormalization.Builder().build(),"conv12"),
 
                 // #C256
-                new LayerEntry("DISCNN3", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
+                new LayerEntry("conv13", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
                         .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
                         .convolutionMode(ConvolutionMode.Same)
                         .activation(Activation.LEAKYRELU)
                         .nOut(256)
-                        .build(),"DISLRN2"),
-                new LayerEntry("DISLRN3", new LocalResponseNormalization.Builder().build(),"DISCNN3"),
+                        .build(),"lrn1"),
+                new LayerEntry("lrn2", new LocalResponseNormalization.Builder().build(),"conv13"),
 
                 // #C512
-                new LayerEntry("DISCNN4", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
+                new LayerEntry("conv14", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
                         .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
                         .convolutionMode(ConvolutionMode.Same)
                         .activation(Activation.LEAKYRELU)
                         .nOut(512)
-                        .build(),"DISLRN3"),
-                new LayerEntry("DISLRN4", new LocalResponseNormalization.Builder().build(),"DISCNN4"),
+                        .build(),"lrn2"),
+                new LayerEntry("lrn3", new LocalResponseNormalization.Builder().build(),"conv14"),
 
 
                 // #second last output layer
-                new LayerEntry("DISCNN5", new ConvolutionLayer.Builder(new int[]{4,4})
+                new LayerEntry("conv15", new ConvolutionLayer.Builder(new int[]{4,4})
                         .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
                         .convolutionMode(ConvolutionMode.Same)
                         .activation(Activation.LEAKYRELU)
                         .nOut(512)
-                        .build(),"DISLRN4"),
-                new LayerEntry("DISLRN5", new LocalResponseNormalization.Builder().build(),"DISCNN5"),
+                        .build(),"lrn3"),
+                new LayerEntry("lrn4", new LocalResponseNormalization.Builder().build(),"conv15"),
 
 
                 // #patch output
-                new LayerEntry("DISCNN6", new ConvolutionLayer.Builder(new int[]{4,4})
+                new LayerEntry("conv16", new ConvolutionLayer.Builder(new int[]{4,4})
                         .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
                         .convolutionMode(ConvolutionMode.Same)
                         .activation(Activation.LEAKYRELU)
                         .nOut(1)
-                        .build(),"DISLRN5"),
+                        .build(),"lrn4"),
 
 
-                new LayerEntry("DISFFN1", new DenseLayer.Builder()
+                new LayerEntry("ffn1", new DenseLayer.Builder()
                         .weightInit(new NormalDistribution(0, 0.005))
                         .activation(Activation.LEAKYRELU)
                         .nOut(4096)
-                        .build(),"DISCNN6"),
-                new LayerEntry("DISFFN2", new DenseLayer.Builder()
+                        .build(),"conv16"),
+
+                new LayerEntry("ffn2", new DenseLayer.Builder()
                         .weightInit(new NormalDistribution(0, 0.005))
                         .activation(Activation.LEAKYRELU)
                         .nOut(4096)
                         .dropOut(0.5)
-                        .build(),"DISFFN1"),
+                        .build(),"ffn1"),
+
 
                 new LayerEntry("DISLoss", new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
                         .weightInit(new NormalDistribution(0, 0.005))
                         .activation(Activation.SOFTMAX)
                         .biasInit(0.1)
                         .nOut(2)
-                        .build(),"DISFFN2")
+                        .build(),"ffn2")
         };
     }
 
