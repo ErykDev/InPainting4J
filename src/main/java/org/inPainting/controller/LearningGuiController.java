@@ -58,14 +58,18 @@ public class LearningGuiController {
     @Autowired
     private CustomLearningGuiController customLearningGuiController;
 
+    private final File gan_file = new File("gan.zip");
+
+    private final File disc_file = new File("discriminator.zip");
+
     private GAN gan;
 
     @FXML
     private void initialize() {
 
-        if (new File("gan.zip").exists() && new File("discriminator.zip").exists()){
+        if (gan_file.exists() && disc_file.exists()){
             try {
-                gan =  new GAN(NeuralNetwork.loadNetworkGraph(new File("discriminator.zip")), NeuralNetwork.loadNetworkGraph(new File("gan.zip")));
+                gan =  new GAN(NeuralNetwork.loadNetworkGraph(disc_file), NeuralNetwork.loadNetworkGraph(gan_file));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -73,7 +77,7 @@ public class LearningGuiController {
             gan = new GAN.Builder().discriminator(() -> {
                 try {
                     log.info("Loading Discriminator");
-                    return NeuralNetwork.loadNetworkGraph(new File("discriminator.zip"));
+                    return NeuralNetwork.loadNetworkGraph(disc_file);
                 } catch (IOException e) {
                     log.error("Error while loading discriminator network creating new one");
                     return NeuralNetwork.getDiscriminator();
@@ -94,7 +98,7 @@ public class LearningGuiController {
 
 
         uiServerComponent.reinitialize(gan.getNetwork());
-        gan.setDiscriminatorListeners(new BaseTrainingListener[]{new PerformanceListener(100, true)});
+        gan.setDiscriminatorListeners(new BaseTrainingListener[]{ new PerformanceListener(10, true) });
         //gan.setGanListeners(new BaseTrainingListener[]{new ScoreIterationListener(1000)});
 
         counterProperty.addListener(new ChangeListener<Number>() {
@@ -107,9 +111,9 @@ public class LearningGuiController {
     }
 
     public void loadAction(ActionEvent actionEvent) {
-        if (new File("gan.zip").exists() && new File("discriminator.zip").exists()){
+        if (gan_file.exists() && disc_file.exists()){
             try {
-                gan =  new GAN(NeuralNetwork.loadNetworkGraph(new File("discriminator.zip")), NeuralNetwork.loadNetworkGraph(new File("gan.zip")));
+                gan =  new GAN(NeuralNetwork.loadNetworkGraph(disc_file), NeuralNetwork.loadNetworkGraph(gan_file));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -117,7 +121,7 @@ public class LearningGuiController {
             gan = new GAN.Builder().discriminator(() -> {
                 try {
                     log.info("Loading Discriminator");
-                    return NeuralNetwork.loadNetworkGraph(new File("discriminator.zip"));
+                    return NeuralNetwork.loadNetworkGraph(disc_file);
                 } catch (IOException e) {
                     log.error("Error while loading discriminator network creating new one");
                     return NeuralNetwork.getDiscriminator();
@@ -139,9 +143,9 @@ public class LearningGuiController {
     }
 
     public void saveAction(ActionEvent actionEvent) {
-        NeuralNetwork.saveNetworkGraph(gan.getNetwork(), new File("gan.zip"));
+        NeuralNetwork.saveNetworkGraph(gan.getNetwork(), gan_file);
         try {
-            ModelSerializer.writeModel(gan.getDiscriminator(), new File("discriminator.zip"),true);
+            ModelSerializer.writeModel(gan.getDiscriminator(), disc_file,true);
         } catch (IOException e) {
             e.printStackTrace();
         }
