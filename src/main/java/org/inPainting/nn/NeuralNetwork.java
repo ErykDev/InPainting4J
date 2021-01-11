@@ -161,63 +161,52 @@ public class NeuralNetwork {
     public static LEntry[] discriminatorLayers() {
         int channels = 4;
 
+        ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
+
         return new LEntry[]{
                 new VertexEntry("merge2", new MergeVertex(), "Input","Mask"),
 
                 // #C64
                 new LayerEntry("conv11", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
-                        .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-                        .convolutionMode(ConvolutionMode.Same)
-                        .activation(Activation.LEAKYRELU)
-                        .nIn(channels)
-                        .nOut(64)
+                        .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU).nIn(channels).nOut(64)
                         .build(),
                         "merge2"),
 
                 // #C128
                 new LayerEntry("conv12", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
-                        .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-                        .convolutionMode(ConvolutionMode.Same)
-                        .activation(Activation.LEAKYRELU)
-                        .nOut(128)
+                        .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU).nOut(128)
                         .build(),"conv11"),
                 new LayerEntry("lrn1", new LocalResponseNormalization.Builder().build(),"conv12"),
 
                 // #C256
                 new LayerEntry("conv13", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
-                        .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-                        .convolutionMode(ConvolutionMode.Same)
-                        .activation(Activation.LEAKYRELU)
-                        .nOut(256)
+                        .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU).nOut(256)
                         .build(),"lrn1"),
                 new LayerEntry("lrn2", new LocalResponseNormalization.Builder().build(),"conv13"),
 
                 // #C512
                 new LayerEntry("conv14", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
-                        .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-                        .convolutionMode(ConvolutionMode.Same)
-                        .activation(Activation.LEAKYRELU)
-                        .nOut(512)
+                        .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU).nOut(512)
                         .build(),"lrn2"),
                 new LayerEntry("lrn3", new LocalResponseNormalization.Builder().build(),"conv14"),
 
 
                 // #second last output layer
                 new LayerEntry("conv15", new ConvolutionLayer.Builder(new int[]{4,4})
-                        .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-                        .convolutionMode(ConvolutionMode.Same)
-                        .activation(Activation.LEAKYRELU)
-                        .nOut(512)
+                        .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU).nOut(512)
                         .build(),"lrn3"),
                 new LayerEntry("lrn4", new LocalResponseNormalization.Builder().build(),"conv15"),
 
 
                 // #patch output
                 new LayerEntry("conv16", new ConvolutionLayer.Builder(new int[]{4,4})
-                        .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-                        .convolutionMode(ConvolutionMode.Same)
-                        .activation(Activation.LEAKYRELU)
-                        .nOut(1)
+                        .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU).nOut(1)
                         .build(),"lrn4"),
 
 

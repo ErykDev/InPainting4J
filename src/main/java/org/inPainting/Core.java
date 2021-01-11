@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -35,6 +36,7 @@ public class Core extends Application {
         Scene scene = new Scene(fxmlLoader.load());
         primaryStage.setScene(scene);
         primaryStage.sizeToScene();
+        primaryStage.initStyle(StageStyle.UTILITY);
         primaryStage.setTitle("InPainting Training");
         primaryStage.setOnCloseRequest(event -> {
             stop();
