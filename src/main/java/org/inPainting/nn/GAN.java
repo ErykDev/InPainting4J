@@ -127,7 +127,7 @@ public class GAN {
             MultiDataSet fakeSetOutput = new MultiDataSet(
                     new INDArray[]{
                             ganOutput[1], //gan output
-                            next.getFeatures()[1] //mask
+                            next.getFeatures()[0] //input
                     },new INDArray[]{
                     Outputs.FAKE()
             });
@@ -135,7 +135,7 @@ public class GAN {
             MultiDataSet realSet = new MultiDataSet(
                     new INDArray[]{
                             next.getLabels()[0], //expected output
-                            next.getFeatures()[1] //mask
+                            next.getFeatures()[0] //input
                     },new INDArray[]{
                     Outputs.REAL()
             });
@@ -252,7 +252,7 @@ public class GAN {
         graphBuilder.addVertex(
                 DislEntry[0].getLayerName(),
                 ((VertexEntry)DislEntry[0]).getVertex(),
-                GenlEntry[GenlEntry.length - 2].getLayerName(), "Mask");
+                GenlEntry[GenlEntry.length - 2].getLayerName(), "Input");
 
         for (int i = 1; i < DislEntry.length; i++) {
             graphBuilder.addLayer(

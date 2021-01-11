@@ -159,19 +159,17 @@ public class NeuralNetwork {
     }
 
     public static LEntry[] discriminatorLayers() {
-        int channels = 4;
-
+        int channels = 6;
         ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
 
         return new LEntry[]{
-                new VertexEntry("merge2", new MergeVertex(), "Input","Mask"),
+                new VertexEntry("merge2", new MergeVertex(), "Input1","Input2"),
 
                 // #C64
                 new LayerEntry("conv11", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
                         .activation(Activation.LEAKYRELU).nIn(channels).nOut(64)
-                        .build(),
-                        "merge2"),
+                        .build(), "merge2"),
 
                 // #C128
                 new LayerEntry("conv12", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
@@ -193,7 +191,6 @@ public class NeuralNetwork {
                         .activation(Activation.LEAKYRELU).nOut(512)
                         .build(),"lrn2"),
                 new LayerEntry("lrn3", new LocalResponseNormalization.Builder().build(),"conv14"),
-
 
                 // #second last output layer
                 new LayerEntry("conv15", new ConvolutionLayer.Builder(new int[]{4,4})
@@ -236,7 +233,6 @@ public class NeuralNetwork {
 
     public static ComputationGraph getDiscriminator() {
         int[] _MergedNetInputShape = {1,4,256,256};
-        int outputChannels = 3;
         int maskChannels = 1;
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
@@ -255,8 +251,8 @@ public class NeuralNetwork {
 
                 .graphBuilder()
 
-                .addInputs("Input", "Mask")
-                //rgb 256x256x3x1 + m 256x256x1x1
+                .addInputs("Input1", "Input2")
+                //rgb 256x256x3x1 + 256x256x3x1
                 .setInputTypes(InputType.convolutional(
                         _MergedNetInputShape[2],
                         _MergedNetInputShape[3],
@@ -264,7 +260,7 @@ public class NeuralNetwork {
                 ), InputType.convolutional(
                         _MergedNetInputShape[2],
                         _MergedNetInputShape[3],
-                        _MergedNetInputShape[1] - outputChannels
+                        _MergedNetInputShape[1] - maskChannels
                 ));
 
         //m + rgb 256x256x4x1
