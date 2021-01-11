@@ -97,11 +97,8 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
             System.gc();
         }
 
-        if (loopNo % 4 == 0 && loopNo != 0) {
-            gan.fit(trainDataSet.next(), t);
-            System.gc();
-        } else
-            gan.fit(trainDataSet.next(), false);
+
+        gan.fit(trainDataSet.next(), t);
     }
 
     @Override

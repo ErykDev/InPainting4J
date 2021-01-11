@@ -93,7 +93,7 @@ public class LearningGuiController {
         customLearningGuiController.onInitialize();
 
 
-        uiServerComponent.reinitialize(gan.getDiscriminator());
+        uiServerComponent.reinitialize(gan.getNetwork());
         gan.setDiscriminatorListeners(new BaseTrainingListener[]{new PerformanceListener(100, true)});
         //gan.setGanListeners(new BaseTrainingListener[]{new ScoreIterationListener(1000)});
 
@@ -131,7 +131,7 @@ public class LearningGuiController {
         customLearningGuiController.onSetNeuralNetwork(gan);
         customLearningGuiController.onInitialize();
 
-        uiServerComponent.reinitialize(gan.getDiscriminator());
+        uiServerComponent.reinitialize(gan.getNetwork());
 
         gan.setDiscriminatorListeners(new BaseTrainingListener[]{new PerformanceListener(100, true)});
         //gan.setGanListeners(new BaseTrainingListener[]{new PerformanceListener(100,true)});

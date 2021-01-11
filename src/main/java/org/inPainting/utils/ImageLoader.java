@@ -84,7 +84,7 @@ public final class ImageLoader {
                     new File(ImageLoader.class.getResource("/data/256/inputs/input"+i+"_mask.png").getFile())
             );
         }
-        return new ImageFileDataSetIterator(res);
+        return new ImageFileDataSetIterator(5, res);
     }
 
 
