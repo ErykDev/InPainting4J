@@ -31,7 +31,7 @@ public class GAN {
     public static final double LEARNING_RATE = 2E-4;
     public static final double LEARNING_BETA1 = 5E-1;
     public static final double LEARNING_LAMBDA = 10E+1;
-    public static final int[] _MergedNetInputShape = {1,4,256,256};
+    public static final int[] _InputShape = {1,3,256,256};
 
 
     protected Supplier<ComputationGraph> generatorSupplier;
@@ -80,8 +80,8 @@ public class GAN {
         return imageLoader.drawImage(network.output(Picture, Mask)[1], width, height);
     }
 
-    public NetResult getOutput(INDArray Picture, INDArray Mask) {
-        return new NetResult(network.output(Picture,Mask));
+    public NetResult getOutput(INDArray Picture) {
+        return new NetResult(network.output(Picture));
     }
 
     public Evaluation evaluateGan(DataSetIterator data) {
@@ -181,8 +181,7 @@ public class GAN {
         // better fake images.
         network.fit(new MultiDataSet(
                 new INDArray[]{
-                        next.getFeatures()[0],
-                        next.getFeatures()[1]
+                        next.getFeatures()[0]
                 },
                 new INDArray[]{
                         Outputs.REAL(),
@@ -206,8 +205,6 @@ public class GAN {
     }
 
     public ComputationGraph NET(IUpdater updater) {
-        int outputChannels = 3;
-        int maskChannels = 1;
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
@@ -215,16 +212,12 @@ public class GAN {
                 .miniBatch(true)
                 .graphBuilder()
                 .allowDisconnected(true)
-                .addInputs("Input", "Mask")
+                .addInputs("Input")
                 //rgb 256x256x3x1 + m 256x256x1x1
                 .setInputTypes(InputType.convolutional(
-                        _MergedNetInputShape[2],
-                        _MergedNetInputShape[3],
-                        _MergedNetInputShape[1] - maskChannels
-                ), InputType.convolutional(
-                        _MergedNetInputShape[2],
-                        _MergedNetInputShape[3],
-                        _MergedNetInputShape[1] - outputChannels
+                        _InputShape[2],
+                        _InputShape[3],
+                        _InputShape[1]
                 ));
 
         //Generator layers

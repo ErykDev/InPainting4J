@@ -15,7 +15,6 @@ public abstract class ImageDataSetIterator implements MultiDataSetIterator {
 
     public abstract MultiDataSet nextRandom();
     public abstract void shuffle();
-    protected abstract INDArray convertToRank4INDArrayMask(Image maskImage);
     protected abstract INDArray convertToRank4INDArrayOutput(Image inputImage);
     protected abstract INDArray convertToRank4INDArrayInput(Image inputImage);
     protected abstract MultiDataSet convertToDataSet(FileEntry fileEntry) throws IOException;
@@ -31,20 +30,16 @@ public abstract class ImageDataSetIterator implements MultiDataSetIterator {
         private File input;
         @Getter
         private File output;
-        @Getter
-        private File mask;
 
-        public FileEntry(File input, File output, File mask){
+        public FileEntry(File input, File output){
             this.input = input;
             this.output = output;
-            this.mask = mask;
         }
 
         @Override
         protected void finalize() throws Throwable {
             input = null;
             output = null;
-            mask = null;
         }
     }
 }

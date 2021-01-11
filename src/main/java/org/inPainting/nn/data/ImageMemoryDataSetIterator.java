@@ -166,34 +166,12 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
             return multiDataSets[multiDataSets.length - 1];
     }
 
-
-    @Override
-    protected INDArray convertToRank4INDArrayMask(Image maskImage) {
-
-        int width = (int) maskImage.getWidth();
-        int height = (int) maskImage.getHeight();
-
-        INDArray temp0 = Nd4j.zeros(1,1,height,width);
-        PixelReader maskinputPR = maskImage.getPixelReader();
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                Color inputMaskColor = maskinputPR.getColor(x, y);
-
-                double mB = scaleColor(inputMaskColor.getBrightness());
-
-                temp0.putScalar(new int[]{0,0,y,x},mB);
-            }
-        }
-        return temp0;
-    }
-
     @Override
     protected INDArray convertToRank4INDArrayOutput(Image inputImage) {
 
         assert inputImage != null;
-        assert inputImage.getHeight() <= GAN._MergedNetInputShape[2];
-        assert inputImage.getWidth() <= GAN._MergedNetInputShape[3];
+        assert inputImage.getHeight() <= GAN._InputShape[2];
+        assert inputImage.getWidth() <= GAN._InputShape[3];
 
         int width = (int) inputImage.getWidth();
         int height = (int) inputImage.getHeight();
@@ -223,14 +201,14 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
 
         assert inputImage != null;
 
-        assert inputImage.getHeight() <= GAN._MergedNetInputShape[2];
-        assert inputImage.getWidth() <= GAN._MergedNetInputShape[3];
+        assert inputImage.getHeight() <= GAN._InputShape[2];
+        assert inputImage.getWidth() <= GAN._InputShape[3];
 
         int width = (int) inputImage.getWidth();
         int height = (int) inputImage.getHeight();
 
 
-        INDArray temp0 = Nd4j.zeros(GAN._MergedNetInputShape[0], GAN._MergedNetInputShape[1] - 1,height,width);
+        INDArray temp0 = Nd4j.zeros(GAN._InputShape[0], GAN._InputShape[1],height,width);
 
         PixelReader inputPR = inputImage.getPixelReader();
 
@@ -256,11 +234,9 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
 
         FileInputStream inputImageFileInputStream = new FileInputStream(fileEntry.getInput());
         FileInputStream expectedImageImageFileInputStream = new FileInputStream(fileEntry.getOutput());
-        FileInputStream expectedImageMaskImageFileInputStream = new FileInputStream(fileEntry.getMask());
 
         Image tempI0 = new Image(inputImageFileInputStream);
         Image tempI1 = new Image(expectedImageImageFileInputStream);
-        Image tempI2 = new Image(expectedImageMaskImageFileInputStream);
 
         if (tempI0.getWidth() != tempI1.getWidth() ||
                 tempI0.getHeight() != tempI1.getHeight())
@@ -268,18 +244,15 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
 
         INDArray temp1 = this.convertToRank4INDArrayInput(tempI0);
         INDArray temp2 = this.convertToRank4INDArrayOutput(tempI1);
-        INDArray temp3 = this.convertToRank4INDArrayMask(tempI2);
 
         inputImageFileInputStream.close();
         expectedImageImageFileInputStream.close();
-        expectedImageMaskImageFileInputStream.close();
 
         inputImageFileInputStream = null;
         expectedImageImageFileInputStream = null;
-        expectedImageMaskImageFileInputStream = null;
 
         MultiDataSet result = new MultiDataSet(
-                new INDArray[] { temp1, temp3 },
+                new INDArray[] { temp1 },
                 new INDArray[] { temp2 }
         );
 

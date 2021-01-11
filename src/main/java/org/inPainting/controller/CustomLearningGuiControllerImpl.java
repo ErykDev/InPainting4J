@@ -45,7 +45,7 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
         //INDArray input = multiDataSet.getFeatures()[0];
         //INDArray real = multiDataSet.getLabels()[0];
 
-        tempOutput = gan.getOutput(multiDataSet.getFeatures()[0],multiDataSet.getFeatures()[1]);
+        tempOutput = gan.getOutput(multiDataSet.getFeatures()[0]);
 
         //outputImageView.setImage(imageLoader.drawImage(tempOutput.mergeByMask(multiDataSet.getFeatures()[0],multiDataSet.getFeatures()[1], width, height), width, height));
 

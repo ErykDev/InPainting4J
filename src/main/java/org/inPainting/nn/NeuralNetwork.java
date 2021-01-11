@@ -46,11 +46,11 @@ public class NeuralNetwork {
         ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
 
         return new LEntry[]{
-                new VertexEntry("merge1", new MergeVertex(), "Input","Mask"),
+                //new VertexEntry("merge1", new MergeVertex(), "Input","Mask"),
 
                 new LayerEntry("conv1-1", new ConvolutionLayer.Builder(3,3).stride(1,1).nOut(64)
                         .convolutionMode(ConvolutionMode.Same).cudnnAlgoMode(cudnnAlgoMode)
-                        .activation(Activation.RELU).build(), "merge1"),
+                        .activation(Activation.RELU).build(), "Input"),
                 new LayerEntry("conv1-2", new ConvolutionLayer.Builder(3,3).stride(1,1).nOut(64)
                         .convolutionMode(ConvolutionMode.Same).cudnnAlgoMode(cudnnAlgoMode)
                         .activation(Activation.RELU).build(), "conv1-1"),
@@ -206,7 +206,7 @@ public class NeuralNetwork {
                         .activation(Activation.LEAKYRELU).nOut(1)
                         .build(),"lrn4"),
 
-
+                /*
                 new LayerEntry("ffn1", new DenseLayer.Builder()
                         .weightInit(new NormalDistribution(0, 0.005))
                         .activation(Activation.LEAKYRELU)
@@ -220,13 +220,18 @@ public class NeuralNetwork {
                         .dropOut(0.5)
                         .build(),"ffn1"),
 
-
                 new LayerEntry("DISLoss", new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
                         .weightInit(new NormalDistribution(0, 0.005))
                         .activation(Activation.SOFTMAX)
                         .biasInit(0.1)
                         .nOut(2)
                         .build(),"ffn2")
+                 */
+
+                new LayerEntry("DISLoss", new OutputLayer.Builder(LossFunctions.LossFunction.XENT)
+                        .activation(Activation.SIGMOID)
+                        .nOut(2)
+                        .build(),"conv16")
         };
     }
 
