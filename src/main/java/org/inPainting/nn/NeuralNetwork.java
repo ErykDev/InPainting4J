@@ -206,7 +206,6 @@ public class NeuralNetwork {
                         .activation(Activation.LEAKYRELU).nOut(1)
                         .build(),"lrn4"),
 
-                /*
                 new LayerEntry("ffn1", new DenseLayer.Builder()
                         .weightInit(new NormalDistribution(0, 0.005))
                         .activation(Activation.LEAKYRELU)
@@ -226,12 +225,13 @@ public class NeuralNetwork {
                         .biasInit(0.1)
                         .nOut(2)
                         .build(),"ffn2")
-                 */
 
+                /*
                 new LayerEntry("DISLoss", new OutputLayer.Builder(LossFunctions.LossFunction.XENT)
                         .activation(Activation.SIGMOID)
                         .nOut(2)
                         .build(),"conv16")
+                 */
         };
     }
 
