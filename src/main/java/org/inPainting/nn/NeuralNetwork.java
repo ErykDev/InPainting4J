@@ -155,13 +155,13 @@ public class NeuralNetwork {
                         .activation(Activation.IDENTITY).build(), "conv9-3"),
                 new LayerEntry("GENCNNLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
                         .activation(Activation.SIGMOID).build(), "conv10")
-
-
         };
     }
 
     public static LEntry[] discriminatorLayers() {
         int channels = 6;
+        int nOutClasses = 2;
+
         ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
 
         return new LEntry[]{
@@ -229,7 +229,7 @@ public class NeuralNetwork {
                 new LayerEntry("DISLoss", new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
                         .weightInit(new NormalDistribution(0, 0.005))
                         .activation(Activation.SOFTMAX)
-                        .nOut(2)
+                        .nOut(nOutClasses)
                         .build(),"ffn1")
 
                 /*
@@ -247,7 +247,6 @@ public class NeuralNetwork {
         int maskChannels = 1;
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
-                .weightInit(new NormalDistribution(0.0,0.02))
                 .updater(Adam.builder()
                         .learningRate(0.0002)
                         .beta1(0.5)
