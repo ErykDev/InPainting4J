@@ -9,14 +9,11 @@ public class NetResult {
     @Getter
     private INDArray outputPicture;
     @Getter
-    private double fakeScore;
-    @Getter
-    private double realScore;
+    private double score;
 
     public NetResult(INDArray[] netOutput){
         this.outputPicture = netOutput[1];
-        this.realScore = netOutput[0].getDouble(1);
-        this.fakeScore = netOutput[0].getDouble(0);
+        this.score = netOutput[0].getDouble(0);
     }
 
     public INDArray mergeByMask(INDArray input, INDArray mask, int width, int height){

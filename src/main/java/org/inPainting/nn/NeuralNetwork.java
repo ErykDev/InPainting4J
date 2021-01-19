@@ -160,7 +160,7 @@ public class NeuralNetwork {
 
     public static LEntry[] discriminatorLayers() {
         int channels = 6;
-        int nOutClasses = 2;
+        int nOutClasses = 1;
 
         ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
 
@@ -217,27 +217,12 @@ public class NeuralNetwork {
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
                         .nOut(1)
                         .build(),"al4"),
-                new LayerEntry("al5", new ActivationLayer.Builder()
-                        .activation(Activation.LEAKYRELU).build(),"conv16"),
 
-                new LayerEntry("ffn1", new DenseLayer.Builder()
-                        .weightInit(new NormalDistribution(0, 0.005))
-                        .activation(Activation.LEAKYRELU)
-                        .nOut(4096)
-                        .build(),"al5"),
-
-                new LayerEntry("DISLoss", new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
-                        .weightInit(new NormalDistribution(0, 0.005))
-                        .activation(Activation.SOFTMAX)
-                        .nOut(nOutClasses)
-                        .build(),"ffn1")
-
-                /*
                 new LayerEntry("DISLoss", new OutputLayer.Builder(LossFunctions.LossFunction.XENT)
+                        //.weightInit(new NormalDistribution(0, 0.005))
                         .activation(Activation.SIGMOID)
-                        .nOut(2)
+                        .nOut(nOutClasses)
                         .build(),"conv16")
-                 */
         };
     }
 
@@ -247,8 +232,9 @@ public class NeuralNetwork {
         int maskChannels = 1;
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
+                //.weightInit(new NormalDistribution(0.0,0.02))
                 .updater(Adam.builder()
-                        .learningRate(0.0002)
+                        .learningRate(0.002)
                         .beta1(0.5)
                         .beta2(0.999)
                         .build())
