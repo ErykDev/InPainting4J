@@ -160,7 +160,7 @@ public class NeuralNetwork {
 
     public static LEntry[] discriminatorLayers() {
         int channels = 6;
-        int nOutClasses = 1;
+        int nOutClasses = 2;
 
         ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
 
@@ -218,9 +218,9 @@ public class NeuralNetwork {
                         .nOut(1)
                         .build(),"al4"),
 
-                new LayerEntry("DISLoss", new OutputLayer.Builder(LossFunctions.LossFunction.XENT)
+                new LayerEntry("DISLoss", new OutputLayer.Builder(LossFunctions.LossFunction.MCXENT)
                         //.weightInit(new NormalDistribution(0, 0.005))
-                        .activation(Activation.SIGMOID)
+                        .activation(Activation.SOFTMAX)
                         .nOut(nOutClasses)
                         .build(),"conv16")
         };
@@ -228,8 +228,7 @@ public class NeuralNetwork {
 
 
     public static ComputationGraph getDiscriminator() {
-        int[] _MergedNetInputShape = {1,4,256,256};
-        int maskChannels = 1;
+        int[] imageInputShape = {1,3,256,256};
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
                 //.weightInit(new NormalDistribution(0.0,0.02))
@@ -249,13 +248,13 @@ public class NeuralNetwork {
                 .addInputs("Input1", "Input2")
                 //rgb 256x256x3x1 + 256x256x3x1
                 .setInputTypes(InputType.convolutional(
-                        _MergedNetInputShape[2],
-                        _MergedNetInputShape[3],
-                        _MergedNetInputShape[1] - maskChannels
+                        imageInputShape[2],
+                        imageInputShape[3],
+                        imageInputShape[1]
                 ), InputType.convolutional(
-                        _MergedNetInputShape[2],
-                        _MergedNetInputShape[3],
-                        _MergedNetInputShape[1] - maskChannels
+                        imageInputShape[2],
+                        imageInputShape[3],
+                        imageInputShape[1]
                 ));
 
         //m + rgb 256x256x4x1
