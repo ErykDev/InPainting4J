@@ -218,11 +218,8 @@ public class NeuralNetwork {
                         .nOut(1)
                         .build(),"al4"),
 
-                new LayerEntry("DISLoss", new OutputLayer.Builder(LossFunctions.LossFunction.MCXENT)
-                        //.weightInit(new NormalDistribution(0, 0.005))
-                        .activation(Activation.SOFTMAX)
-                        .nOut(nOutClasses)
-                        .build(),"conv16")
+                new LayerEntry("DISLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
+                        .activation(Activation.SIGMOID).build(), "conv16")
         };
     }
 
@@ -233,7 +230,7 @@ public class NeuralNetwork {
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
                 //.weightInit(new NormalDistribution(0.0,0.02))
                 .updater(Adam.builder()
-                        .learningRate(0.002)
+                        .learningRate(0.0002)
                         .beta1(0.5)
                         .beta2(0.999)
                         .build())

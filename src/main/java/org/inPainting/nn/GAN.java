@@ -387,20 +387,16 @@ public class GAN {
     }
 
     public static class Outputs {
-        public static INDArray REAL(){
-            INDArray real_one = Nd4j.zeros(1,2);
-            real_one.putScalar(0, 1);
-            real_one.putScalar(1, 0);
 
-            return real_one;
+        private static INDArray m_real = Nd4j.ones(1,1,16,16);
+        private static INDArray m_fake = Nd4j.zeros(1,1,16,16);
+
+        public static INDArray REAL(){
+            return Outputs.m_real;
         }
 
         public static INDArray FAKE(){
-            INDArray fake_one = Nd4j.zeros(1,2);
-            fake_one.putScalar(0, 0);
-            fake_one.putScalar(1, 1);
-
-            return fake_one;
+            return Outputs.m_fake;
         }
     }
 }
