@@ -34,7 +34,5 @@ public class NetResult {
     protected void finalize() throws Throwable {
         outputPicture.close();
         score.close();
-        outputPicture = null;
-        score = null;
     }
 }

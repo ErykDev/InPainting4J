@@ -153,15 +153,13 @@ public class NeuralNetwork {
                 new LayerEntry("conv10", new ConvolutionLayer.Builder(1,1).stride(1,1).nOut(3)
                         .convolutionMode(ConvolutionMode.Same).cudnnAlgoMode(cudnnAlgoMode)
                         .activation(Activation.IDENTITY).build(), "conv9-3"),
-                new LayerEntry("GENCNNLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
+                new LayerEntry("GENCNNLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.MEAN_ABSOLUTE_ERROR)
                         .activation(Activation.SIGMOID).build(), "conv10")
         };
     }
 
     public static LEntry[] discriminatorLayers() {
         int channels = 6;
-        int nOutClasses = 2;
-
         ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
 
         return new LEntry[]{
@@ -211,7 +209,6 @@ public class NeuralNetwork {
                 new LayerEntry("al4", new ActivationLayer.Builder()
                         .activation(Activation.LEAKYRELU).build(),"lrn4"),
 
-
                 // #patch output
                 new LayerEntry("conv16", new ConvolutionLayer.Builder(new int[]{4,4})
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
@@ -228,7 +225,6 @@ public class NeuralNetwork {
         int[] imageInputShape = {1,3,256,256};
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
-                //.weightInit(new NormalDistribution(0.0,0.02))
                 .updater(Adam.builder()
                         .learningRate(0.0002)
                         .beta1(0.5)
@@ -236,9 +232,7 @@ public class NeuralNetwork {
                         .build())
 
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-                .weightInit(WeightInit.RELU)
-                .miniBatch(false)
-
+                .weightInit(new NormalDistribution(0.0,0.02))
 
                 .graphBuilder()
 
@@ -254,13 +248,11 @@ public class NeuralNetwork {
                         imageInputShape[1]
                 ));
 
-        //m + rgb 256x256x4x1
-        //.setInputType(InputType.convolutional(256,256,3));
         for (int i = 0; i < discriminatorLayers().length; i++)
             if (!discriminatorLayers()[i].isVertex())
-                graphBuilder.addLayer(((LayerEntry)discriminatorLayers()[i]).getLayerName(), ((LayerEntry)discriminatorLayers()[i]).getLayer(), ((LayerEntry)discriminatorLayers()[i]).getInputs());
+                graphBuilder.addLayer(discriminatorLayers()[i].getLayerName(), ((LayerEntry)discriminatorLayers()[i]).getLayer(), ((LayerEntry)discriminatorLayers()[i]).getInputs());
             else
-                graphBuilder.addVertex(((VertexEntry)discriminatorLayers()[i]).getLayerName(), ((VertexEntry)discriminatorLayers()[i]).getVertex(), ((VertexEntry)discriminatorLayers()[i]).getInputs());
+                graphBuilder.addVertex(discriminatorLayers()[i].getLayerName(), ((VertexEntry)discriminatorLayers()[i]).getVertex(), ((VertexEntry)discriminatorLayers()[i]).getInputs());
 
         graphBuilder.setOutputs("DISLoss");
 

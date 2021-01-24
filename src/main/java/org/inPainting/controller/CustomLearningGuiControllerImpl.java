@@ -42,9 +42,6 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
         int width = 256;
         int height = 256;
 
-        //INDArray input = multiDataSet.getFeatures()[0];
-        //INDArray real = multiDataSet.getLabels()[0];
-
         tempOutput = gan.getOutput(multiDataSet.getFeatures()[0]);
 
         //outputImageView.setImage(imageLoader.drawImage(tempOutput.mergeByMask(multiDataSet.getFeatures()[0],multiDataSet.getFeatures()[1], width, height), width, height));
@@ -55,7 +52,6 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
         log.info("Refreshing GUI; Medium Score: " + tempOutput.mediumScore());
 
         tempOutput = null;
-        System.gc();
     }
 
     @Synchronized
@@ -83,10 +79,10 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
             try {
                 ModelSerializer.writeModel(gan.getDiscriminator(), new File("discriminator.zip"),true);
                 ModelSerializer.writeModel(gan.getNetwork(), new File("gan.zip"),true);
-                System.gc();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
             log.info("Saving model loopNo="+loopNo);
         }
 
@@ -96,7 +92,6 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
             trainDataSet.reset();
             System.gc();
         }
-
 
         gan.fit(trainDataSet.next(), t);
     }

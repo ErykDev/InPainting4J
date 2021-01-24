@@ -138,7 +138,6 @@ public class LearningGuiController {
         uiServerComponent.reinitialize(gan.getNetwork());
 
         gan.setDiscriminatorListeners(new BaseTrainingListener[]{new PerformanceListener(10, true)});
-        //gan.setGanListeners(new BaseTrainingListener[]{new PerformanceListener(100,true)});
         showAlert(Alert.AlertType.INFORMATION, "Success", "Neural network successfully loaded");
     }
 
