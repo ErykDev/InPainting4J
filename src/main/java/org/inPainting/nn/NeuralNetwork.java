@@ -226,7 +226,7 @@ public class NeuralNetwork {
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
                 .updater(Adam.builder()
-                        .learningRate(0.0002)
+                        .learningRate(0.0004)
                         .beta1(0.5)
                         .beta2(0.999)
                         .build())

@@ -7,8 +7,12 @@ import org.deeplearning4j.nn.conf.*;
 import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.misc.FrozenLayerWithBackprop;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
+import org.inPainting.nn.entry.LEntry;
+import org.inPainting.nn.entry.LayerEntry;
+import org.inPainting.nn.entry.VertexEntry;
+import org.inPainting.nn.res.NetResult;
+import org.inPainting.utils.ImageLoader;
 import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
@@ -17,11 +21,6 @@ import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.learning.config.Sgd;
-import org.inPainting.nn.entry.LEntry;
-import org.inPainting.nn.entry.LayerEntry;
-import org.inPainting.nn.entry.VertexEntry;
-import org.inPainting.nn.res.NetResult;
-import org.inPainting.utils.ImageLoader;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -153,13 +152,9 @@ public class GAN {
             discriminator.fit(fakeSetOutput);
             discriminator.fit(realSet);
 
-            //discriminator.fit(fakeSetInput);
-            //discriminator.fit(realSet);
-
-            fakeSetOutput.detach();
-            realSet.detach();
-            //fakeSetInput.detach();
-
+            for (INDArray indArray: ganOutput)
+                indArray = null;
+            ganOutput = null;
 
             // Update the discriminator in the Pix2PixGAN network
             updateGanWithDiscriminator();
