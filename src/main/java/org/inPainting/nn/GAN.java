@@ -27,7 +27,7 @@ import java.util.function.Supplier;
 
 public class GAN {
 
-    public static final double LEARNING_RATE = 2E-4;
+    public static final double LEARNING_RATE = 4E-4;
     public static final double LEARNING_BETA1 = 5E-1;
     public static final double LEARNING_LAMBDA = 10E+1;
     public static final int[] _InputShape = {1,3,256,256};
@@ -79,7 +79,7 @@ public class GAN {
         return imageLoader.drawImage(network.output(Picture, Mask)[1], width, height);
     }
 
-    public NetResult getOutput(INDArray Picture) {
+    public NetResult getOutput(INDArray[] Picture) {
         return new NetResult(network.output(Picture));
     }
 
@@ -110,18 +110,8 @@ public class GAN {
     }
 
     public void fit(MultiDataSet next, boolean trainDiscriminator) {
-        //INDArray realImage = next.getLabels()[0];
-        /*for (int i = 0; i < discriminator.getLayers().length; i++) {
-            if (discriminatorLearningRates[i] != null) {
-                discriminator.setLearningRate(i, discriminatorLearningRates[i]);
-            }
-        }*/
         if (trainDiscriminator) {
             INDArray[] ganOutput = network.output(next.getFeatures());
-
-            // Real images are marked as "0;1", fake images at "1;0".
-            //DataSet realSet = new DataSet(next.getLabels()[0], Outputs.REAL());
-            //DataSet fakeSet = new DataSet(ganOutput[1], Outputs.FAKE());
 
             MultiDataSet fakeSetOutput = new MultiDataSet(
                     new INDArray[]{
@@ -160,24 +150,12 @@ public class GAN {
             updateGanWithDiscriminator();
         }
 
-        // Generate a new set of adversarial examples and try to mislead the discriminator.
-        // by labeling the fake images as real images we reward the generator when it's output
-        // tricks the discriminator.
-        //INDArray adversarialExamples = Nd4j.rand(new int[]{batchSize, latentDim});
-        //INDArray misleadingLabels = Nd4j.zeros(batchSize, 1);
-
-        //DataSet adversarialSet = new DataSet(next.getFeatures(), realone);
-        // Set learning rate of discriminator part of gan to zero.
-        /*for (int i = generator.getLayers().length; i < gan.getLayers().length; i++) {
-            gan.setLearningRate(i, 0.0);
-        }*/
-
         // Fit the Pix2PixGAN on the adversarial set, trying to fool the discriminator by generating
         // better fake images.
         network.fit(new MultiDataSet(
-                new INDArray[]{
-                        next.getFeatures()[0]
-                },
+
+                next.getFeatures(),
+
                 new INDArray[]{
                         Outputs.REAL(),
                         next.getLabels()[0]
@@ -207,12 +185,16 @@ public class GAN {
                 .miniBatch(true)
                 .graphBuilder()
                 .allowDisconnected(true)
-                .addInputs("Input")
+                .addInputs("Input", "Mask")
                 //rgb 256x256x3x1 + m 256x256x1x1
                 .setInputTypes(InputType.convolutional(
-                        _InputShape[2],
                         _InputShape[3],
+                        _InputShape[2],
                         _InputShape[1]
+                ),InputType.convolutional(
+                        _InputShape[3],
+                        _InputShape[2],
+                        1 //mask depth
                 ));
 
         //Generator layers

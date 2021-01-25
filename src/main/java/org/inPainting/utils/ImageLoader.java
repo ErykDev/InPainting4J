@@ -58,33 +58,32 @@ public final class ImageLoader {
         return OImage;
     }
 
-    public ImageMemoryDataSetIterator prepareInMemoryData(){
+    public ImageMemoryDataSetIterator prepareInMemoryData() {
 
-        ImageDataSetIterator.FileEntry[] entries = new ImageDataSetIterator.FileEntry[new File(ImageLoader.class.getResource("/data/256/inputs/").getFile()).listFiles().length/2];
+        ImageDataSetIterator.FileEntry[] entries = new ImageFileDataSetIterator.FileEntry[new File(ImageLoader.class.getResource("/data/256/inputs/").getFile()).listFiles().length/2];
 
         for (int i = 1; i < entries.length + 1; i++) {
             entries[i-1] = new ImageDataSetIterator.FileEntry(
                     new File(ImageLoader.class.getResource("/data/256/inputs/input"+i+".png").getFile()),
+                    new File(ImageLoader.class.getResource("/data/256/inputs/input"+i+"_mask.png").getFile()),
                     new File(ImageLoader.class.getResource("/data/256/expected/expected"+i+".png").getFile())
             );
         }
-        return new ImageMemoryDataSetIterator(entries);
+        return new ImageMemoryDataSetIterator(4, entries);
     }
 
     public ImageFileDataSetIterator prepareInFileData(){
 
-        ImageFileDataSetIterator.FileEntry[] res = new ImageFileDataSetIterator.FileEntry[new File(ImageLoader.class.getResource("/data/256/inputs/").getFile()).listFiles().length/2];
-
-        for (int i = 1; i < res.length + 1; i++) {
-            res[i-1] = new ImageFileDataSetIterator.FileEntry(
-                    new File(ImageLoader.class.getResource("/data/256/inputs/input"+i+".png").getFile()),
-                    new File(ImageLoader.class.getResource("/data/256/expected/expected"+i+".png").getFile())
+        ImageFileDataSetIterator.FileEntry[] entries = new ImageFileDataSetIterator.FileEntry[new File(ImageLoader.class.getResource("/data/256/inputs/").getFile()).listFiles().length/2];
+        for (int i = 1; i < entries.length + 1; i++) {
+            entries[i-1] = new ImageFileDataSetIterator.FileEntry(
+                    new File(ImageLoader.class.getResource("/data/256/inputs/input" +i+".png").getFile()),
+                    new File(ImageLoader.class.getResource("/data/256/inputs/input"+i+"_mask.png").getFile()),
+                    new File(ImageLoader.class.getResource("/data/256/expected/expected" +i+".png").getFile())
             );
         }
-        return new ImageFileDataSetIterator(5, res);
+        return new ImageFileDataSetIterator(4, entries);
     }
-
-
 
     private static double scaleColor(double value) {
         return (value);

@@ -48,11 +48,11 @@ public class NeuralNetwork {
         ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
 
         return new LEntry[]{
-                //new VertexEntry("merge1", new MergeVertex(), "Input","Mask"),
+                new VertexEntry("merge1", new MergeVertex(), "Input","Mask"),
 
                 new LayerEntry("conv1-1", new ConvolutionLayer.Builder(3,3).stride(1,1).nOut(64)
                         .convolutionMode(ConvolutionMode.Same).cudnnAlgoMode(cudnnAlgoMode)
-                        .activation(Activation.RELU).build(), "Input"),
+                        .activation(Activation.RELU).build(), "merge1"),
                 new LayerEntry("conv1-2", new ConvolutionLayer.Builder(3,3).stride(1,1).nOut(64)
                         .convolutionMode(ConvolutionMode.Same).cudnnAlgoMode(cudnnAlgoMode)
                         .activation(Activation.RELU).build(), "conv1-1"),
@@ -168,52 +168,49 @@ public class NeuralNetwork {
                 // #C64
                 new LayerEntry("conv11", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
-                        .nIn(channels).nOut(64)
+                        .activation(Activation.LEAKYRELU)
+                        .nIn(channels)
+                        .nOut(64)
                         .build(), "merge2"),
-                new LayerEntry("al0", new ActivationLayer.Builder()
-                        .activation(Activation.LEAKYRELU).build(),"conv11"),
 
                 // #C128
                 new LayerEntry("conv12", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU)
                         .nOut(128)
-                        .build(),"al0"),
+                        .build(),"conv11"),
                 new LayerEntry("lrn1", new LocalResponseNormalization.Builder().build(),"conv12"),
-                new LayerEntry("al1", new ActivationLayer.Builder()
-                        .activation(Activation.LEAKYRELU).build(),"lrn1"),
 
                 // #C256
                 new LayerEntry("conv13", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU)
                         .nOut(256)
-                        .build(),"al1"),
+                        .build(),"lrn1"),
                 new LayerEntry("lrn2", new LocalResponseNormalization.Builder().build(),"conv13"),
-                new LayerEntry("al2", new ActivationLayer.Builder()
-                        .activation(Activation.LEAKYRELU).build(),"lrn2"),
 
                 // #C512
                 new LayerEntry("conv14", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU)
                         .nOut(512)
-                        .build(),"al2"),
+                        .build(),"lrn2"),
                 new LayerEntry("lrn3", new LocalResponseNormalization.Builder().build(),"conv14"),
-                new LayerEntry("al3", new ActivationLayer.Builder()
-                        .activation(Activation.LEAKYRELU).build(),"lrn3"),
 
                 // #second last output layer
                 new LayerEntry("conv15", new ConvolutionLayer.Builder(new int[]{4,4})
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU)
                         .nOut(512)
-                        .build(),"al3"),
+                        .build(),"lrn3"),
                 new LayerEntry("lrn4", new LocalResponseNormalization.Builder().build(),"conv15"),
-                new LayerEntry("al4", new ActivationLayer.Builder()
-                        .activation(Activation.LEAKYRELU).build(),"lrn4"),
 
                 // #patch output
                 new LayerEntry("conv16", new ConvolutionLayer.Builder(new int[]{4,4})
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU)
                         .nOut(1)
-                        .build(),"al4"),
+                        .build(),"lrn4"),
 
                 new LayerEntry("DISLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
                         .activation(Activation.SIGMOID).build(), "conv16")
@@ -226,13 +223,13 @@ public class NeuralNetwork {
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
                 .updater(Adam.builder()
-                        .learningRate(0.0004)
+                        .learningRate(4E-4)
                         .beta1(0.5)
                         .beta2(0.999)
                         .build())
 
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-                .weightInit(new NormalDistribution(0.0,0.02))
+                .weightInit(WeightInit.RELU)
 
                 .graphBuilder()
 

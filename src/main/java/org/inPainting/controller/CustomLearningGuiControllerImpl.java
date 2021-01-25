@@ -42,7 +42,7 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
         int width = 256;
         int height = 256;
 
-        tempOutput = gan.getOutput(multiDataSet.getFeatures()[0]);
+        tempOutput = gan.getOutput(multiDataSet.getFeatures());
 
         //outputImageView.setImage(imageLoader.drawImage(tempOutput.mergeByMask(multiDataSet.getFeatures()[0],multiDataSet.getFeatures()[1], width, height), width, height));
 

@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.Random;
 
 public final class ImageFileDataSetIterator extends ImageDataSetIterator {
-
     private Random r;
 
     private FileEntry[] fileEntries;
@@ -32,14 +31,18 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
     private int iterationsPerPicture = 20;
 
     private FileInputStream inputImageFileInputStream;
+    private FileInputStream inputImageMaskFileInputStream;
     private FileInputStream expectedImageImageFileInputStream;
 
     private INDArray temp0;
+
     private INDArray temp1;
     private INDArray temp2;
+    private INDArray temp3;
 
     private Image tempI0;
     private Image tempI1;
+    private Image tempI2;
 
 
     public ImageFileDataSetIterator(int IterationsPerPicture, FileEntry[] fileEntries){
@@ -137,8 +140,13 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
             //pointer same as before so no need to read data again
             if ((int)((pointer-1) / iterationsPerPicture) == (int)(pointer / iterationsPerPicture)){
                 return new MultiDataSet(
-                        new INDArray[] { temp1 },
-                        new INDArray[] { temp2 }
+                        new INDArray[] {
+                                temp1, //Input Image
+                                temp3  //Input Mask
+                        },
+                        new INDArray[] {
+                                temp2 //Expected output
+                        }
                 );
             } else
                 return this.convertToDataSet(fileEntries[(int)(pointer / iterationsPerPicture)]);
@@ -185,6 +193,30 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
     }
 
     @Override
+    protected INDArray convertToRank4INDArrayInputMask(Image inputImageMask) {
+
+        assert inputImageMask != null;
+        assert inputImageMask.getHeight() <= GAN._InputShape[2];
+        assert inputImageMask.getWidth() <= GAN._InputShape[3];
+
+        int width = (int) inputImageMask.getWidth();
+        int height = (int) inputImageMask.getHeight();
+
+        temp0 = Nd4j.zeros(1,1,height,width);
+        PixelReader inputPR = inputImageMask.getPixelReader();
+
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++) {
+                Color inputColor = inputPR.getColor(x, y);
+                double fBr = scaleColor(inputColor.getBrightness());
+
+                temp0.putScalar(new int[]{0,0,y,x}, fBr);
+            }
+
+        return temp0;
+    }
+
+    @Override
     protected INDArray convertToRank4INDArrayOutput(Image inputImage) {
 
         assert inputImage != null;
@@ -219,9 +251,11 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
         inputImageFileInputStream = new FileInputStream(fileEntry.getInput());
         expectedImageImageFileInputStream = new FileInputStream(fileEntry.getOutput());
+        inputImageMaskFileInputStream = new FileInputStream(fileEntry.getInput_mask());
 
         tempI0 = new Image(inputImageFileInputStream);
         tempI1 = new Image(expectedImageImageFileInputStream);
+        tempI2 = new Image(inputImageMaskFileInputStream);
 
         if (tempI0.getWidth() != tempI1.getWidth() ||
                 tempI0.getHeight() != tempI1.getHeight())
@@ -229,16 +263,21 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
         temp1 = this.convertToRank4INDArrayInput(tempI0);
         temp2 = this.convertToRank4INDArrayOutput(tempI1);
+        temp3 = this.convertToRank4INDArrayInputMask(tempI2);
 
         inputImageFileInputStream.close();
         expectedImageImageFileInputStream.close();
+        inputImageMaskFileInputStream.close();
 
-        inputImageFileInputStream = null;
-        expectedImageImageFileInputStream = null;
 
         MultiDataSet result = new MultiDataSet(
-                new INDArray[] { temp1 },
-                new INDArray[] { temp2 }
+                new INDArray[] {
+                        temp1, //Input Image
+                        temp3  //Input Mask
+                },
+                new INDArray[] {
+                        temp2 //Expected output
+                }
         );
 
         if (preProcessor!=null) {
