@@ -170,7 +170,6 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
         int width = (int) inputImage.getWidth();
         int height = (int) inputImage.getHeight();
 
-
         temp0 = Nd4j.zeros(GAN._InputShape[0], GAN._InputShape[1],height,width);
 
         PixelReader inputPR = inputImage.getPixelReader();

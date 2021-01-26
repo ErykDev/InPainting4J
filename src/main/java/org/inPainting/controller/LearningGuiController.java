@@ -5,6 +5,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
 import org.deeplearning4j.optimize.listeners.PerformanceListener;
+import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.linalg.learning.config.Sgd;
@@ -24,6 +26,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Component
 @Slf4j
@@ -63,6 +67,8 @@ public class LearningGuiController {
     private final File disc_file = new File("discriminator.zip");
 
     private GAN gan;
+
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @FXML
     private void initialize() {
@@ -137,7 +143,7 @@ public class LearningGuiController {
 
         uiServerComponent.reinitialize(gan.getNetwork());
 
-        gan.setDiscriminatorListeners(new BaseTrainingListener[]{new PerformanceListener(10, true)});
+        gan.setDiscriminatorListeners(new BaseTrainingListener[]{ new ScoreIterationListener(10) });
         showAlert(Alert.AlertType.INFORMATION, "Success", "Neural network successfully loaded");
     }
 
@@ -173,12 +179,25 @@ public class LearningGuiController {
 
     @Synchronized
     private void trainLoop() {
-        if (btnTrain.isSelected()) {
-            counterProperty.setValue(counterProperty.get() + 1);
-            customLearningGuiController.onTrainLoop(counterProperty.get(),TrainD.isSelected());
+            Task<Void> executeAppTask = new Task<Void>() {
+                @Override
+                protected Void call() {
+                    customLearningGuiController.onTrainLoop(counterProperty.get(), TrainD.isSelected());
+                    Platform.runLater(() -> counterProperty.setValue(counterProperty.get() + 1));
+                    return null;
+                }
+            };
+            executeAppTask.setOnSucceeded(e -> {
+                if (btnTrain.isSelected()) {
+                    trainLoop();
+                }
+            });
+            executeAppTask.setOnFailed(e -> {
+                Throwable problem = executeAppTask.getException();
+                log.error("learning loop error",problem);
+            });
 
-            Platform.runLater(this::trainLoop);
-        }
+            executor.submit(executeAppTask);
     }
 
     private void showAlert(Alert.AlertType alertType, String title, String content) {

@@ -5,7 +5,6 @@ import lombok.Getter;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.*;
 import org.deeplearning4j.nn.conf.inputs.InputType;
-import org.deeplearning4j.nn.conf.layers.misc.FrozenLayerWithBackprop;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
 import org.inPainting.nn.entry.LEntry;
@@ -227,7 +226,7 @@ public class GAN {
         for (int i = 1; i < DislEntry.length; i++) {
             graphBuilder.addLayer(
                     DislEntry[i].getLayerName(),
-                    new FrozenLayerWithBackprop(((LayerEntry) DislEntry[i]).getLayer()),
+                    ((LayerEntry) DislEntry[i]).getLayer(),
                     DislEntry[i].getInputs()
             );
         }
@@ -244,7 +243,6 @@ public class GAN {
         int genLayerCount = network.getLayers().length - discriminator.getLayers().length; //Position of first Discriminator Layer
         for (int i = genLayerCount; i < network.getLayers().length; i++) {
             network.getLayer(i).setParams(discriminator.getLayer(i - genLayerCount).params());
-            network.getLayer(i).setMaskArray(discriminator.getLayer(i-genLayerCount).getMaskArray());
         }
     }
 
@@ -365,8 +363,16 @@ public class GAN {
 
     public static class Outputs {
 
-        private static INDArray m_real = Nd4j.ones(1,1,16,16);
-        private static INDArray m_fake = Nd4j.zeros(1,1,16,16);
+        private static INDArray m_real = Nd4j.ones(1,2);
+        private static INDArray m_fake = Nd4j.zeros(1,2);
+
+        static {
+            m_real.putScalar(0,1);
+            m_real.putScalar(1,0);
+
+            m_fake.putScalar(0,0);
+            m_fake.putScalar(1,1);
+        }
 
         public static INDArray REAL(){
             return Outputs.m_real;

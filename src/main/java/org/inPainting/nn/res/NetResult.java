@@ -16,8 +16,8 @@ public class NetResult {
         this.score = netOutput[0];
     }
 
-    public double mediumScore(){
-        return this.score.medianNumber().doubleValue();
+    public double score(){
+        return this.score.getDouble(0);
     }
 
     public INDArray mergeByMask(INDArray input, INDArray mask, int width, int height){

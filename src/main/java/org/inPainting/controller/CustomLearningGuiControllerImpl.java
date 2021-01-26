@@ -49,7 +49,7 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
         outputImageView.setImage(imageLoader.drawImage(tempOutput.getOutputPicture(), width, height));
         realImageView.setImage(imageLoader.drawImage(multiDataSet.getLabels()[0], width, height));
 
-        log.info("Refreshing GUI; Medium Score: " + tempOutput.mediumScore());
+        log.info("Refreshing GUI; Positive Score: " + tempOutput.score());
 
         tempOutput = null;
     }
@@ -68,13 +68,14 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
     @Override
     public void onInitialize() {
         //Switching to storing data in File instead of memory
-        trainDataSet = imageLoader.prepareInFileData();
+        trainDataSet = imageLoader.prepareInMemoryData();
         log.info("Done loading train data");
     }
 
     @Override
     public void onTrainLoop(long loopNo, boolean t) {
 
+        /*
         if (loopNo % (trainDataSet.getMaxSize()*2) == 0){
             try {
                 ModelSerializer.writeModel(gan.getDiscriminator(), new File("discriminator.zip"),true);
@@ -85,7 +86,7 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
             log.info("Saving model loopNo="+loopNo);
         }
-
+        */
 
         if (!trainDataSet.hasNext()) {
             log.info("Resetting ImageDataSetIterator");
