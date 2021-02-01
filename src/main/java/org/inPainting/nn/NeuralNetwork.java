@@ -9,22 +9,14 @@ import org.deeplearning4j.nn.conf.distribution.NormalDistribution;
 import org.deeplearning4j.nn.conf.graph.MergeVertex;
 import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.*;
-import org.deeplearning4j.nn.conf.layers.misc.FrozenLayerWithBackprop;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
-import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.util.ModelSerializer;
-import org.nd4j.linalg.activations.Activation;
-import org.nd4j.linalg.activations.impl.ActivationLReLU;
-import org.nd4j.linalg.api.ops.impl.scalar.LeakyReLU;
-import org.nd4j.linalg.learning.config.Adam;
-import org.nd4j.linalg.learning.config.IUpdater;
-import org.nd4j.linalg.learning.config.Nesterovs;
-import org.nd4j.linalg.learning.config.Sgd;
-import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.inPainting.nn.entry.LEntry;
 import org.inPainting.nn.entry.LayerEntry;
 import org.inPainting.nn.entry.VertexEntry;
+import org.nd4j.linalg.activations.Activation;
+import org.nd4j.linalg.learning.config.Adam;
+import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 import java.io.File;
 import java.io.IOException;
@@ -161,80 +153,61 @@ public class NeuralNetwork {
 
     public static LEntry[] discriminatorLayers() {
         int channels = 6;
-        double nonZeroBias = 1;
-        int numClasses = 2;
+        ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
+
 
         return new LEntry[]{
                 new VertexEntry("merge2", new MergeVertex(), "Input1","Input2"),
 
-                new LayerEntry("conv11", new ConvolutionLayer.Builder(new int[]{11,11}, new int[]{4, 4})
-                        .activation(Activation.RELU)
-                        .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-                        .convolutionMode(ConvolutionMode.Truncate)
-                        .nIn(channels)
-                        .nOut(96)
+                // #C64
+                new LayerEntry("conv11", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
+                        .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU)
+                        .nIn(channels).nOut(64)
                         .build(), "merge2"),
-                new LayerEntry("lr1", new LocalResponseNormalization.Builder().build(),"conv11"),
-                new LayerEntry("maxpool1",new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX)
-                        .kernelSize(3,3)
-                        .stride(2,2)
-                        .padding(1,1)
-                        .build(),"lr1"),
 
+                // #C128
+                new LayerEntry("conv12", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
+                        .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU)
+                        .nOut(128)
+                        .build(),"conv11"),
+                new LayerEntry("lrn1", new BatchNormalization.Builder().build(),"conv12"),
 
-                new LayerEntry("conv12", new ConvolutionLayer.Builder(new int[]{5,5}, new int[]{1,1}, new int[]{2,2})
-                        .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-                        .convolutionMode(ConvolutionMode.Truncate)
-                        .activation(Activation.RELU)
+                // #C256
+                new LayerEntry("conv13", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
+                        .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU)
                         .nOut(256)
-                        .biasInit(nonZeroBias)
-                        .build(), "maxpool1"),
-                new LayerEntry("maxpool2",new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX, new int[]{3, 3}, new int[]{2, 2})
-                        .convolutionMode(ConvolutionMode.Truncate)
-                        .build(),"conv12"),
-                new LayerEntry("lr2", new LocalResponseNormalization.Builder().build(),"maxpool2"),
+                        .build(),"lrn1"),
+                new LayerEntry("lrn2", new BatchNormalization.Builder().build(),"conv13"),
 
 
-                new LayerEntry("conv13", new ConvolutionLayer.Builder()
-                        .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-                        .convolutionMode(ConvolutionMode.Same)
-                        .activation(Activation.RELU)
-                        .kernelSize(3,3)
-                        .stride(1,1)
-                        .nOut(384)
-                        .build(), "lr2"),
-                new LayerEntry("conv14",new ConvolutionLayer.Builder(new int[]{3,3}, new int[]{1,1})
-                        .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-                        .convolutionMode(ConvolutionMode.Same)
-                        .activation(Activation.RELU)
-                        .nOut(384)
-                        .biasInit(nonZeroBias)
-                        .build(), "conv13"),
+                // #C512
+                new LayerEntry("conv14", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
+                        .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU)
+                        .nOut(512)
+                        .build(),"lrn2"),
 
-                new LayerEntry("conv15",new ConvolutionLayer.Builder(new int[]{3,3}, new int[]{1,1})
-                        .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-                        .convolutionMode(ConvolutionMode.Same)
-                        .activation(Activation.RELU)
-                        .nOut(256)
-                        .biasInit(nonZeroBias)
-                        .build(),"conv14"),
-                new LayerEntry("maxpool3",new SubsamplingLayer.Builder(SubsamplingLayer.PoolingType.MAX, new int[]{3,3}, new int[]{2,2})
-                        .convolutionMode(ConvolutionMode.Truncate)
-                        .build(),"conv15"),
+                new LayerEntry("lrn3", new BatchNormalization.Builder().build(),"conv14"),
 
-                new LayerEntry("ffn1", new DenseLayer.Builder()
-                        .activation(Activation.RELU)
-                        .weightInit(new NormalDistribution(0, 0.005))
-                        .biasInit(nonZeroBias)
-                        .nOut(4096)
-                        .build(),"maxpool3"),
+                // #second last output layer
+                new LayerEntry("conv15", new ConvolutionLayer.Builder(new int[]{4,4})
+                        .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU)
+                        .nOut(512)
+                        .build(),"lrn3"),
+                new LayerEntry("lrn4", new BatchNormalization.Builder().build(),"conv15"),
 
-                new LayerEntry("DISLoss", new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
-                        .nOut(numClasses)
-                        .activation(Activation.SOFTMAX)
-                        .weightInit(new NormalDistribution(0, 0.005))
-                        .biasInit(0.1)
-                        .build(),"ffn1")
+                // #patch output
+                new LayerEntry("conv16", new ConvolutionLayer.Builder(new int[]{4,4})
+                        .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .nOut(1)
+                        .build(),"lrn4"),
+
+                new LayerEntry("DISLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
+                        .activation(Activation.SIGMOID).build(), "conv16")
         };
     }
 
@@ -245,9 +218,8 @@ public class NeuralNetwork {
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
                 .weightInit(new NormalDistribution(0.0, 0.01))
                 .updater(Adam.builder()
-                        .learningRate(0.002)
+                        .learningRate(0.0002)
                         .beta1(0.5)
-                        .beta2(0.999)
                         .build())
 
                 .l2(5 * 1e-4)

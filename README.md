@@ -6,7 +6,7 @@
 
  U-Net model as generator
 
- Alex-Net as discriminator
+ 70x70 PatchGan as discriminator (C64-C128-C256-C512)
 
 ![Input Image](https://i.ibb.co/TvstBg1/input5.png)
 ![Output Image](https://i.ibb.co/qkGnQJs/image0.gif)

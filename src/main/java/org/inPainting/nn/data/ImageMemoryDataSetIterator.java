@@ -30,6 +30,8 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
 
     private int iterationsPerPicture = 20;
 
+    private boolean shuffling = true;
+
 
     public ImageMemoryDataSetIterator(int IterationsPerPicture, MultiDataSet[] multiDataSets){
         this.iterationsPerPicture = IterationsPerPicture;
@@ -37,7 +39,8 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
         super.maxSize = (multiDataSets.length - 1) * IterationsPerPicture;
         this.r = new Random();
 
-        this.shuffle();
+        if (this.shuffling)
+            this.shuffle();
     }
 
     public ImageMemoryDataSetIterator(MultiDataSet[] multiDataSets){
@@ -45,7 +48,8 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
         super.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
         this.r = new Random();
 
-        this.shuffle();
+        if (this.shuffling)
+            this.shuffle();
     }
 
     public ImageMemoryDataSetIterator(MultiDataSet[] multiDataSets, int seed){
@@ -53,14 +57,16 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
         super.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
         this.r = new Random(seed);
 
-        this.shuffle();
+        if (this.shuffling)
+            this.shuffle();
     }
 
 
     @SneakyThrows
-    public ImageMemoryDataSetIterator(int IterationsPerPicture, FileEntry[] entries){
+    public ImageMemoryDataSetIterator(int IterationsPerPicture, FileEntry[] entries, boolean shuffling){
         this.iterationsPerPicture = IterationsPerPicture;
         this.multiDataSets = new MultiDataSet[entries.length];
+        this.shuffling = shuffling;
 
         for (int i = 0; i < entries.length; i++) {
             this.multiDataSets[i] = convertToDataSet(entries[i]);
@@ -69,7 +75,8 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
         super.maxSize = (multiDataSets.length - 1) * IterationsPerPicture;
         this.r = new Random();
 
-        this.shuffle();
+        if (this.shuffling)
+            this.shuffle();
     }
 
     @SneakyThrows
@@ -83,7 +90,8 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
         super.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
         this.r = new Random();
 
-        this.shuffle();
+        if (this.shuffling)
+            this.shuffle();
     }
 
     @SneakyThrows
@@ -97,7 +105,8 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
         super.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
         this.r = new Random(seed);
 
-        this.shuffle();
+        if (this.shuffling)
+            this.shuffle();
     }
 
     @Override
@@ -133,7 +142,8 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
     @Synchronized
     public void reset() {
         this.pointer = 0;
-        this.shuffle();
+        if (this.shuffling)
+            this.shuffle();
         System.gc();
     }
 

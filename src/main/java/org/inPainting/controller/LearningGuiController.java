@@ -104,7 +104,7 @@ public class LearningGuiController {
 
 
         uiServerComponent.reinitialize(gan.getNetwork());
-        gan.setDiscriminatorListeners(new BaseTrainingListener[]{ new PerformanceListener(10, true) });
+        gan.setDiscriminatorListeners(new BaseTrainingListener[]{ new PerformanceListener(20, true) });
         //gan.setGanListeners(new BaseTrainingListener[]{new ScoreIterationListener(1000)});
 
         counterProperty.addListener(new ChangeListener<Number>() {
@@ -143,7 +143,7 @@ public class LearningGuiController {
 
         uiServerComponent.reinitialize(gan.getNetwork());
 
-        gan.setDiscriminatorListeners(new BaseTrainingListener[]{ new ScoreIterationListener(10) });
+        gan.setDiscriminatorListeners(new BaseTrainingListener[]{ new ScoreIterationListener(20) });
         showAlert(Alert.AlertType.INFORMATION, "Success", "Neural network successfully loaded");
     }
 

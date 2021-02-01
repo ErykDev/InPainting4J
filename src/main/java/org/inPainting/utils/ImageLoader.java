@@ -1,5 +1,6 @@
 package org.inPainting.utils;
 
+import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
@@ -8,7 +9,10 @@ import org.inPainting.nn.data.ImageDataSetIterator;
 import org.inPainting.nn.data.ImageFileDataSetIterator;
 import org.inPainting.nn.data.ImageMemoryDataSetIterator;
 
+import javax.imageio.ImageIO;
+import java.awt.image.RenderedImage;
 import java.io.File;
+import java.io.IOException;
 
 public final class ImageLoader {
 
@@ -43,7 +47,16 @@ public final class ImageLoader {
         return writableTemp;
     }
 
+    public void saveImage(WritableImage image, File file) throws IOException {
+        if (!file.exists())
+            file.createNewFile();
 
+        RenderedImage renderedImage = SwingFXUtils.fromFXImage(image, null);
+        ImageIO.write(
+                renderedImage,
+                "png",
+                file);
+    }
 
     public static INDArray mergeImagesByMask(INDArray IImage, INDArray Mask, INDArray OImage, int width, int height) {
         for (int y = 0; y < height; y++) {
@@ -69,7 +82,7 @@ public final class ImageLoader {
                     new File(ImageLoader.class.getResource("/data/256/expected/expected"+i+".png").getFile())
             );
         }
-        return new ImageMemoryDataSetIterator(4, entries);
+        return new ImageMemoryDataSetIterator(5, entries, false);
     }
 
     public ImageFileDataSetIterator prepareInFileData(){
@@ -82,7 +95,7 @@ public final class ImageLoader {
                     new File(ImageLoader.class.getResource("/data/256/expected/expected" +i+".png").getFile())
             );
         }
-        return new ImageFileDataSetIterator(4, entries);
+        return new ImageFileDataSetIterator(5, entries);
     }
 
     private static double scaleColor(double value) {

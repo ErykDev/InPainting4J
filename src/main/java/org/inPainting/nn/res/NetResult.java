@@ -17,7 +17,7 @@ public class NetResult {
     }
 
     public double score(){
-        return this.score.getDouble(0);
+        return this.score.sumNumber().doubleValue() / this.score.length();
     }
 
     public INDArray mergeByMask(INDArray input, INDArray mask, int width, int height){

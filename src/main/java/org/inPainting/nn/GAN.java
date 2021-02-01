@@ -363,9 +363,10 @@ public class GAN {
 
     public static class Outputs {
 
-        private static INDArray m_real = Nd4j.ones(1,2);
-        private static INDArray m_fake = Nd4j.zeros(1,2);
+        private static INDArray m_real = Nd4j.ones(1,1,16,16);
+        private static INDArray m_fake = Nd4j.zeros(1,1,16,16);
 
+        /*
         static {
             m_real.putScalar(0,1);
             m_real.putScalar(1,0);
@@ -373,6 +374,7 @@ public class GAN {
             m_fake.putScalar(0,0);
             m_fake.putScalar(1,1);
         }
+        */
 
         public static INDArray REAL(){
             return Outputs.m_real;

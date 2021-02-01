@@ -74,7 +74,6 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
     @Override
     public void onTrainLoop(long loopNo, boolean t) {
-
         /*
         if (loopNo % (trainDataSet.getMaxSize()*2) == 0){
             try {
