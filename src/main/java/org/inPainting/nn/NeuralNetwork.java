@@ -216,15 +216,15 @@ public class NeuralNetwork {
         int[] imageInputShape = {1,3,256,256};
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
-                .weightInit(new NormalDistribution(0.0, 0.01))
+                .weightInit(new NormalDistribution(0.0, 0.02))
                 .updater(Adam.builder()
                         .learningRate(0.0002)
                         .beta1(0.5)
                         .build())
 
-                .l2(5 * 1e-4)
+                //.l2(5 * 1e-4)
                 .miniBatch(false)
-                .gradientNormalization(GradientNormalization.RenormalizeL2PerLayer) // normalize to prevent vanishing or exploding gradients
+                //.gradientNormalization(GradientNormalization.RenormalizeL2PerLayer) // normalize to prevent vanishing or exploding gradients
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
 
                 .graphBuilder()
@@ -243,9 +243,9 @@ public class NeuralNetwork {
 
         for (int i = 0; i < discriminatorLayers().length; i++)
             if (!discriminatorLayers()[i].isVertex())
-                graphBuilder.addLayer(discriminatorLayers()[i].getLayerName(), ((LayerEntry)discriminatorLayers()[i]).getLayer(), ((LayerEntry)discriminatorLayers()[i]).getInputs());
+                graphBuilder.addLayer(discriminatorLayers()[i].getLayerName(), ((LayerEntry)discriminatorLayers()[i]).getLayer(), discriminatorLayers()[i].getInputs());
             else
-                graphBuilder.addVertex(discriminatorLayers()[i].getLayerName(), ((VertexEntry)discriminatorLayers()[i]).getVertex(), ((VertexEntry)discriminatorLayers()[i]).getInputs());
+                graphBuilder.addVertex(discriminatorLayers()[i].getLayerName(), ((VertexEntry)discriminatorLayers()[i]).getVertex(), discriminatorLayers()[i].getInputs());
 
         graphBuilder.setOutputs("DISLoss");
 

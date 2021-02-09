@@ -73,7 +73,7 @@ public final class ImageLoader {
 
     public ImageMemoryDataSetIterator prepareInMemoryData() {
 
-        ImageDataSetIterator.FileEntry[] entries = new ImageFileDataSetIterator.FileEntry[new File(ImageLoader.class.getResource("/data/256/inputs/").getFile()).listFiles().length/2];
+        ImageDataSetIterator.FileEntry[] entries = new ImageFileDataSetIterator.FileEntry[new File(ImageLoader.class.getResource("/data/256/expected/").getFile()).listFiles().length];
 
         for (int i = 1; i < entries.length + 1; i++) {
             entries[i-1] = new ImageDataSetIterator.FileEntry(
@@ -87,7 +87,7 @@ public final class ImageLoader {
 
     public ImageFileDataSetIterator prepareInFileData(){
 
-        ImageFileDataSetIterator.FileEntry[] entries = new ImageFileDataSetIterator.FileEntry[new File(ImageLoader.class.getResource("/data/256/inputs/").getFile()).listFiles().length/2];
+        ImageFileDataSetIterator.FileEntry[] entries = new ImageFileDataSetIterator.FileEntry[new File(ImageLoader.class.getResource("/data/256/expected/").getFile()).listFiles().length];
         for (int i = 1; i < entries.length + 1; i++) {
             entries[i-1] = new ImageFileDataSetIterator.FileEntry(
                     new File(ImageLoader.class.getResource("/data/256/inputs/input" +i+".png").getFile()),
