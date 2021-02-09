@@ -1,5 +1,5 @@
 # InPainting4J
- Dl4J Implementation of Impainting
+ Dl4J Implementation of Inpainting
 
 * Project is based on [DL4J-gans](https://github.com/wmeddie/dl4j-gans)
 * and UI from  [better-coding-dl4j-tutorial](https://gitlab.com/better-coding.com/public/dl4j-tutorial.git)
