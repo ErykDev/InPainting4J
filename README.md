@@ -1,4 +1,4 @@
-# InPainting4J
+# Pix2Pix4J
  Dl4J Implementation of Pix2Pix Gan
 
 * Project is based on [DL4J-gans](https://github.com/wmeddie/dl4j-gans)
