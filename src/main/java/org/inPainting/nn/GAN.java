@@ -6,30 +6,32 @@ import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.*;
 import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
+import org.nd4j.evaluation.classification.Evaluation;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.MultiDataSet;
+import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
+import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.learning.config.IUpdater;
+import org.nd4j.linalg.learning.config.Sgd;
 import org.inPainting.nn.entry.LEntry;
 import org.inPainting.nn.entry.LayerEntry;
 import org.inPainting.nn.entry.VertexEntry;
 import org.inPainting.nn.res.NetResult;
 import org.inPainting.utils.ImageLoader;
-import org.nd4j.evaluation.classification.Evaluation;
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.MultiDataSet;
-import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
-import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
-import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.learning.config.IUpdater;
-import org.nd4j.linalg.learning.config.Sgd;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 public class GAN {
 
-    public static final double LEARNING_RATE = 4E-4;
-    public static final double LEARNING_BETA1 = 5E-1;
-    public static final double LEARNING_LAMBDA = 10E+1;
-    public static final int[] _InputShape = {1,3,256,256};
+    public static final double LEARNING_RATE = 0.0002;
+    public static final double LEARNING_BETA1 = 0.5;
+    public static final double LEARNING_LAMBDA = 100;
+    public static final int[][] _InputShape = {
+            {1,3,256,256},
+            {1,1,256,256}
+    };
 
 
     protected Supplier<ComputationGraph> generatorSupplier;
@@ -82,12 +84,8 @@ public class GAN {
         return new NetResult(network.output(Picture));
     }
 
-    public Evaluation evaluateGan(DataSetIterator data) {
+    public Evaluation evaluateGan(MultiDataSetIterator data) {
         return network.evaluate(data);
-    }
-
-    public Evaluation evaluateGan(DataSetIterator data, List<String> labelsList) {
-        return network.evaluate(data, labelsList);
     }
 
     public void setDiscriminatorListeners(BaseTrainingListener[] listeners) {
@@ -112,38 +110,47 @@ public class GAN {
         if (trainDiscriminator) {
             INDArray[] ganOutput = network.output(next.getFeatures());
 
+            // treating input as Fake
+            MultiDataSet inputSet = new MultiDataSet(
+                    new INDArray[] {
+                            next.getFeatures()[0], //input
+                            next.getFeatures()[0], //input
+                            next.getFeatures()[1] //mask
+                    }, new INDArray[] {
+                    Outputs.FAKE
+            });
+
+            // Fake images are marked as "0".
             MultiDataSet fakeSetOutput = new MultiDataSet(
                     new INDArray[]{
                             ganOutput[1], //gan output
-                            next.getFeatures()[0] //input
-                    },new INDArray[]{
-                    Outputs.FAKE()
+                            next.getFeatures()[0], //input
+                            next.getFeatures()[1] //mask
+                    },new INDArray[] {
+                    Outputs.FAKE //zeros
             });
 
+            // Real images are marked as "1"
             MultiDataSet realSet = new MultiDataSet(
                     new INDArray[]{
                             next.getLabels()[0], //expected output
-                            next.getFeatures()[0] //input
-                    },new INDArray[]{
-                    Outputs.REAL()
-            });
-
-            /*
-            MultiDataSet fakeSetInput = new MultiDataSet(
-                    new INDArray[]{
                             next.getFeatures()[0], //input
                             next.getFeatures()[1] //mask
-                    },new INDArray[]{
-                    Outputs.FAKE()
+                    },new INDArray[] {
+                    Outputs.REAL //ones
             });
-             */
+
+            discriminator.fit(inputSet);
+            //for (int i = 0; i < 2; i++)
+            discriminator.fit(realSet);
 
             discriminator.fit(fakeSetOutput);
-            discriminator.fit(realSet);
+
 
             for (INDArray indArray: ganOutput)
                 indArray = null;
             ganOutput = null;
+
 
             // Update the discriminator in the Pix2PixGAN network
             updateGanWithDiscriminator();
@@ -152,11 +159,10 @@ public class GAN {
         // Fit the Pix2PixGAN on the adversarial set, trying to fool the discriminator by generating
         // better fake images.
         network.fit(new MultiDataSet(
+                next.getFeatures(), // Image And Mask
 
-                next.getFeatures(),
-
-                new INDArray[]{
-                        Outputs.REAL(),
+                new INDArray[] {
+                        Outputs.REAL,
                         next.getLabels()[0]
                 })
         );
@@ -177,39 +183,39 @@ public class GAN {
     }
 
     public ComputationGraph NET(IUpdater updater) {
-
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+                .weightInit(WeightInit.RELU)
                 .updater(updater)
+                .l2(5e-5)
                 .miniBatch(true)
                 .graphBuilder()
-                .allowDisconnected(true)
                 .addInputs("Input", "Mask")
                 //rgb 256x256x3x1 + m 256x256x1x1
                 .setInputTypes(InputType.convolutional(
-                        _InputShape[3],
-                        _InputShape[2],
-                        _InputShape[1]
+                        _InputShape[0][3],
+                        _InputShape[0][2],
+                        _InputShape[0][1]
                 ),InputType.convolutional(
-                        _InputShape[3],
-                        _InputShape[2],
-                        1 //mask depth
+                        _InputShape[1][3],
+                        _InputShape[1][2],
+                        _InputShape[1][1] //mask depth
                 ));
 
         //Generator layers
         LEntry[] GenlEntry = NeuralNetwork.genLayers();
-        for (int i = 0; i < GenlEntry.length; i++) {
-            if (!GenlEntry[i].isVertex())
+        for (LEntry lEntry : GenlEntry) {
+            if (!lEntry.isVertex())
                 graphBuilder.addLayer(
-                        GenlEntry[i].getLayerName(),
-                        ((LayerEntry)GenlEntry[i]).getLayer(),
-                        GenlEntry[i].getInputs()
+                        lEntry.getLayerName(),
+                        ((LayerEntry) lEntry).getLayer(),
+                        lEntry.getInputs()
                 );
             else
                 graphBuilder.addVertex(
-                        GenlEntry[i].getLayerName(),
-                        ((VertexEntry)GenlEntry[i]).getVertex(),
-                        GenlEntry[i].getInputs()
+                        lEntry.getLayerName(),
+                        ((VertexEntry) lEntry).getVertex(),
+                        lEntry.getInputs()
                 );
         }
 
@@ -221,15 +227,15 @@ public class GAN {
         graphBuilder.addVertex(
                 DislEntry[0].getLayerName(),
                 ((VertexEntry)DislEntry[0]).getVertex(),
-                GenlEntry[GenlEntry.length - 2].getLayerName(), "Input");
+                GenlEntry[GenlEntry.length - 2].getLayerName(), "Input", "Mask");
 
-        for (int i = 1; i < DislEntry.length; i++) {
+        for (int i = 1; i < DislEntry.length; i++)
             graphBuilder.addLayer(
                     DislEntry[i].getLayerName(),
                     ((LayerEntry) DislEntry[i]).getLayer(),
                     DislEntry[i].getInputs()
             );
-        }
+
         graphBuilder.setOutputs("DISLoss","GENCNNLoss"); //Discriminator output, Generator loss
 
         return new ComputationGraph(graphBuilder.build());
@@ -243,6 +249,7 @@ public class GAN {
         int genLayerCount = network.getLayers().length - discriminator.getLayers().length; //Position of first Discriminator Layer
         for (int i = genLayerCount; i < network.getLayers().length; i++) {
             network.getLayer(i).setParams(discriminator.getLayer(i - genLayerCount).params());
+            network.getLayer(i).setMaskArray(discriminator.getLayer(i - genLayerCount).getMaskArray());
         }
     }
 
@@ -362,26 +369,7 @@ public class GAN {
     }
 
     public static class Outputs {
-
-        private static INDArray m_real = Nd4j.ones(1,1,16,16);
-        private static INDArray m_fake = Nd4j.zeros(1,1,16,16);
-
-        /*
-        static {
-            m_real.putScalar(0,1);
-            m_real.putScalar(1,0);
-
-            m_fake.putScalar(0,0);
-            m_fake.putScalar(1,1);
-        }
-        */
-
-        public static INDArray REAL(){
-            return Outputs.m_real;
-        }
-
-        public static INDArray FAKE(){
-            return Outputs.m_fake;
-        }
+        private final static INDArray REAL = Nd4j.ones(1,1,16,16);
+        private final static INDArray FAKE = Nd4j.zeros(1,1,16,16);
     }
 }

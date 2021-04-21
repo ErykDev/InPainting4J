@@ -4,17 +4,12 @@ import javafx.fxml.FXML;
 import javafx.scene.image.ImageView;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
-import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.dataset.MultiDataSet;
-import org.inPainting.nn.data.ImageDataSetIterator;
-import org.inPainting.nn.data.ImageFileDataSetIterator;
+import org.inPainting.nn.dataSets.ImageDataSetIterator;
 import org.inPainting.nn.GAN;
 import org.inPainting.nn.res.NetResult;
 import org.inPainting.utils.ImageLoader;
 import org.springframework.stereotype.Component;
-
-import java.io.File;
-import java.io.IOException;
 
 @Component
 @Slf4j
@@ -93,7 +88,10 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
             System.gc();
         }
 
-        gan.fit(trainDataSet.next(), t);
+        if (loopNo % 4 == 0)
+            gan.fit(trainDataSet.next(), t);
+        else
+            gan.fit(trainDataSet.next(), false);
     }
 
     @Override

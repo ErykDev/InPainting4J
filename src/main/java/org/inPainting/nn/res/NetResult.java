@@ -11,7 +11,7 @@ public class NetResult {
     @Getter
     private INDArray score;
 
-    public NetResult(INDArray[] netOutput){
+    public NetResult(INDArray[] netOutput) {
         this.outputPicture = netOutput[1];
         this.score = netOutput[0];
     }

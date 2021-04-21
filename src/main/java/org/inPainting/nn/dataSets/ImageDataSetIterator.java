@@ -1,4 +1,4 @@
-package org.inPainting.nn.data;
+package org.inPainting.nn.dataSets;
 
 import javafx.scene.image.Image;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package org.inPainting.nn.data;
+package org.inPainting.nn.dataSets;
 
 
 import javafx.scene.image.Image;
@@ -7,18 +7,20 @@ import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
+import org.inPainting.nn.GAN;
+import org.inPainting.nn.dataSets.ImageDataSetIterator;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSetPreProcessor;
 import org.nd4j.linalg.factory.Nd4j;
-import org.inPainting.nn.GAN;
 
-import java.io.File;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Random;
 
 public final class ImageFileDataSetIterator extends ImageDataSetIterator {
+
     private Random r;
 
     private FileEntry[] fileEntries;
@@ -45,10 +47,11 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
     private Image tempI2;
 
 
-    public ImageFileDataSetIterator(int IterationsPerPicture, FileEntry[] fileEntries){
+    public ImageFileDataSetIterator(int IterationsPerPicture, FileEntry[] fileEntries, MultiDataSetPreProcessor preProcessor){
         this.iterationsPerPicture = IterationsPerPicture;
         this.fileEntries = fileEntries;
-        super.maxSize = (fileEntries.length - 1) * IterationsPerPicture;
+        super.maxSize = (long) (fileEntries.length - 1) * IterationsPerPicture;
+        this.preProcessor = preProcessor;
         this.r = new Random();
 
         this.initFirstSet();
@@ -58,7 +61,7 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
     public ImageFileDataSetIterator(FileEntry[] fileEntries){
         this.fileEntries = fileEntries;
-        super.maxSize = (fileEntries.length - 1) * iterationsPerPicture;
+        super.maxSize = (long) (fileEntries.length - 1) * iterationsPerPicture;
         this.r = new Random();
 
         this.initFirstSet();
@@ -68,7 +71,7 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
     public ImageFileDataSetIterator(FileEntry[] fileEntries, int seed){
         this.fileEntries = fileEntries;
-        super.maxSize = (fileEntries.length - 1) * iterationsPerPicture;
+        super.maxSize = (long) (fileEntries.length - 1) * iterationsPerPicture;
         this.r = new Random(seed);
 
         this.initFirstSet();
@@ -164,13 +167,14 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
         assert inputImage != null;
 
-        assert inputImage.getHeight() <= GAN._InputShape[2];
-        assert inputImage.getWidth() <= GAN._InputShape[3];
+        assert inputImage.getHeight() <= GAN._InputShape[0][2];
+        assert inputImage.getWidth() <= GAN._InputShape[0][3];
 
         int width = (int) inputImage.getWidth();
         int height = (int) inputImage.getHeight();
 
-        temp0 = Nd4j.zeros(GAN._InputShape[0], GAN._InputShape[1],height,width);
+
+        temp0 = Nd4j.zeros(GAN._InputShape[0][0], GAN._InputShape[0][1],height,width);
 
         PixelReader inputPR = inputImage.getPixelReader();
 
@@ -195,8 +199,8 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
     protected INDArray convertToRank4INDArrayInputMask(Image inputImageMask) {
 
         assert inputImageMask != null;
-        assert inputImageMask.getHeight() <= GAN._InputShape[2];
-        assert inputImageMask.getWidth() <= GAN._InputShape[3];
+        assert inputImageMask.getHeight() <= GAN._InputShape[1][2];
+        assert inputImageMask.getWidth() <= GAN._InputShape[1][3];
 
         int width = (int) inputImageMask.getWidth();
         int height = (int) inputImageMask.getHeight();
@@ -219,8 +223,8 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
     protected INDArray convertToRank4INDArrayOutput(Image inputImage) {
 
         assert inputImage != null;
-        assert inputImage.getHeight() <= GAN._InputShape[2];
-        assert inputImage.getWidth() <= GAN._InputShape[3];
+        assert inputImage.getHeight() <= GAN._InputShape[0][2];
+        assert inputImage.getWidth() <= GAN._InputShape[0][3];
 
         int width = (int) inputImage.getWidth();
         int height = (int) inputImage.getHeight();
@@ -235,7 +239,6 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
                 double fCr = scaleColor(inputColor.getRed());
                 double fCg = scaleColor(inputColor.getGreen());
                 double fCb = scaleColor(inputColor.getBlue());
-                //double fCA = scaleColor(inputColor.getOpacity());
 
                 temp0.putScalar(new int[]{0,0,y,x},fCr);
                 temp0.putScalar(new int[]{0,1,y,x},fCg);

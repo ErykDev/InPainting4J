@@ -1,4 +1,4 @@
-package org.inPainting.nn.data;
+package org.inPainting.nn.dataSets;
 
 
 import javafx.scene.image.Image;
@@ -7,17 +7,17 @@ import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
+import org.inPainting.nn.GAN;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSetPreProcessor;
 import org.nd4j.linalg.factory.Nd4j;
-import org.inPainting.nn.GAN;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Random;
 
-public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
+public final class  ImageMemoryDataSetIterator extends ImageDataSetIterator {
 
     private Random r;
 
@@ -30,8 +30,6 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
 
     private int iterationsPerPicture = 20;
 
-    private boolean shuffling = true;
-
 
     public ImageMemoryDataSetIterator(int IterationsPerPicture, MultiDataSet[] multiDataSets){
         this.iterationsPerPicture = IterationsPerPicture;
@@ -39,8 +37,7 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
         super.maxSize = (multiDataSets.length - 1) * IterationsPerPicture;
         this.r = new Random();
 
-        if (this.shuffling)
-            this.shuffle();
+        this.shuffle();
     }
 
     public ImageMemoryDataSetIterator(MultiDataSet[] multiDataSets){
@@ -48,8 +45,7 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
         super.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
         this.r = new Random();
 
-        if (this.shuffling)
-            this.shuffle();
+        this.shuffle();
     }
 
     public ImageMemoryDataSetIterator(MultiDataSet[] multiDataSets, int seed){
@@ -57,16 +53,14 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
         super.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
         this.r = new Random(seed);
 
-        if (this.shuffling)
-            this.shuffle();
+        this.shuffle();
     }
 
 
     @SneakyThrows
-    public ImageMemoryDataSetIterator(int IterationsPerPicture, FileEntry[] entries, boolean shuffling){
+    public ImageMemoryDataSetIterator(int IterationsPerPicture, FileEntry[] entries){
         this.iterationsPerPicture = IterationsPerPicture;
         this.multiDataSets = new MultiDataSet[entries.length];
-        this.shuffling = shuffling;
 
         for (int i = 0; i < entries.length; i++) {
             this.multiDataSets[i] = convertToDataSet(entries[i]);
@@ -75,8 +69,7 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
         super.maxSize = (multiDataSets.length - 1) * IterationsPerPicture;
         this.r = new Random();
 
-        if (this.shuffling)
-            this.shuffle();
+        this.shuffle();
     }
 
     @SneakyThrows
@@ -90,8 +83,7 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
         super.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
         this.r = new Random();
 
-        if (this.shuffling)
-            this.shuffle();
+        this.shuffle();
     }
 
     @SneakyThrows
@@ -105,8 +97,7 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
         super.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
         this.r = new Random(seed);
 
-        if (this.shuffling)
-            this.shuffle();
+        this.shuffle();
     }
 
     @Override
@@ -142,8 +133,7 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
     @Synchronized
     public void reset() {
         this.pointer = 0;
-        if (this.shuffling)
-            this.shuffle();
+        this.shuffle();
         System.gc();
     }
 
@@ -180,8 +170,8 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
     protected INDArray convertToRank4INDArrayOutput(Image inputImage) {
 
         assert inputImage != null;
-        assert inputImage.getHeight() <= GAN._InputShape[2];
-        assert inputImage.getWidth() <= GAN._InputShape[3];
+        assert inputImage.getHeight() <= GAN._InputShape[0][2];
+        assert inputImage.getWidth() <= GAN._InputShape[0][3];
 
         int width = (int) inputImage.getWidth();
         int height = (int) inputImage.getHeight();
@@ -211,14 +201,14 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
 
         assert inputImage != null;
 
-        assert inputImage.getHeight() <= GAN._InputShape[2];
-        assert inputImage.getWidth() <= GAN._InputShape[3];
+        assert inputImage.getHeight() <= GAN._InputShape[0][2];
+        assert inputImage.getWidth() <= GAN._InputShape[0][3];
 
         int width = (int) inputImage.getWidth();
         int height = (int) inputImage.getHeight();
 
 
-        INDArray temp0 = Nd4j.zeros(GAN._InputShape[0], GAN._InputShape[1],height,width);
+        INDArray temp0 = Nd4j.zeros(GAN._InputShape[0][0], GAN._InputShape[0][1],height,width);
 
         PixelReader inputPR = inputImage.getPixelReader();
 
@@ -242,8 +232,8 @@ public final class ImageMemoryDataSetIterator extends ImageDataSetIterator {
     @Override
     protected INDArray convertToRank4INDArrayInputMask(Image inputImageMask) {
         assert inputImageMask != null;
-        assert inputImageMask.getHeight() <= GAN._InputShape[2];
-        assert inputImageMask.getWidth() <= GAN._InputShape[3];
+        assert inputImageMask.getHeight() <= GAN._InputShape[1][2];
+        assert inputImageMask.getWidth() <= GAN._InputShape[1][3];
 
         int width = (int) inputImageMask.getWidth();
         int height = (int) inputImageMask.getHeight();

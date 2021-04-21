@@ -3,7 +3,6 @@ package org.inPainting.nn;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.ConvolutionMode;
-import org.deeplearning4j.nn.conf.GradientNormalization;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.distribution.NormalDistribution;
 import org.deeplearning4j.nn.conf.graph.MergeVertex;
@@ -11,12 +10,13 @@ import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.*;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.util.ModelSerializer;
+import org.nd4j.linalg.activations.Activation;
+import org.nd4j.linalg.activations.impl.ActivationLReLU;
+import org.nd4j.linalg.learning.config.Adam;
+import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.inPainting.nn.entry.LEntry;
 import org.inPainting.nn.entry.LayerEntry;
 import org.inPainting.nn.entry.VertexEntry;
-import org.nd4j.linalg.activations.Activation;
-import org.nd4j.linalg.learning.config.Adam;
-import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +42,7 @@ public class NeuralNetwork {
 
         return new LEntry[]{
                 new VertexEntry("merge1", new MergeVertex(), "Input","Mask"),
+
 
                 new LayerEntry("conv1-1", new ConvolutionLayer.Builder(3,3).stride(1,1).nOut(64)
                         .convolutionMode(ConvolutionMode.Same).cudnnAlgoMode(cudnnAlgoMode)
@@ -152,68 +153,67 @@ public class NeuralNetwork {
     }
 
     public static LEntry[] discriminatorLayers() {
-        int channels = 6;
+        int channels = 6+1; //two images + mask
         ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
 
-
         return new LEntry[]{
-                new VertexEntry("merge2", new MergeVertex(), "Input1","Input2"),
+                new VertexEntry("merge2", new MergeVertex(), "Input1", "Input2", "Mask"),
 
                 // #C64
-                new LayerEntry("conv11", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
+                new LayerEntry("conv11", new ConvolutionLayer.Builder(4,4).stride(2,2)
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
                         .activation(Activation.LEAKYRELU)
                         .nIn(channels).nOut(64)
                         .build(), "merge2"),
+                new LayerEntry("lrn1", new BatchNormalization.Builder().build(),"conv11"),
 
                 // #C128
-                new LayerEntry("conv12", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
+                new LayerEntry("conv12", new ConvolutionLayer.Builder(4,4).stride(2,2)
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
                         .activation(Activation.LEAKYRELU)
                         .nOut(128)
-                        .build(),"conv11"),
-                new LayerEntry("lrn1", new BatchNormalization.Builder().build(),"conv12"),
+                        .build(),"lrn1"),
+                new LayerEntry("lrn2", new BatchNormalization.Builder().build(),"conv12"),
 
                 // #C256
-                new LayerEntry("conv13", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
+                new LayerEntry("conv13", new ConvolutionLayer.Builder(4,4).stride(2,2)
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
                         .activation(Activation.LEAKYRELU)
-                        .nOut(256)
-                        .build(),"lrn1"),
-                new LayerEntry("lrn2", new BatchNormalization.Builder().build(),"conv13"),
-
+                        .nOut(128*2)
+                        .build(),"lrn2"),
+                new LayerEntry("lrn3", new BatchNormalization.Builder().build(),"conv13"),
 
                 // #C512
-                new LayerEntry("conv14", new ConvolutionLayer.Builder(new int[]{4,4}, new int[]{2,2})
+                new LayerEntry("conv14", new ConvolutionLayer.Builder(4,4).stride(2,2)
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
                         .activation(Activation.LEAKYRELU)
-                        .nOut(512)
-                        .build(),"lrn2"),
-
-                new LayerEntry("lrn3", new BatchNormalization.Builder().build(),"conv14"),
+                        .nOut(128*4)
+                        .build(),"lrn3"),
+                new LayerEntry("lrn4", new BatchNormalization.Builder().build(),"conv14"),
 
                 // #second last output layer
-                new LayerEntry("conv15", new ConvolutionLayer.Builder(new int[]{4,4})
+                new LayerEntry("conv15", new ConvolutionLayer.Builder(4,4)
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
                         .activation(Activation.LEAKYRELU)
-                        .nOut(512)
-                        .build(),"lrn3"),
-                new LayerEntry("lrn4", new BatchNormalization.Builder().build(),"conv15"),
+                        .nOut(128*4)
+                        .build(),"lrn4"),
+                new LayerEntry("lrn5", new BatchNormalization.Builder().build(),"conv15"),
 
                 // #patch output
-                new LayerEntry("conv16", new ConvolutionLayer.Builder(new int[]{4,4})
+                new LayerEntry("conv16", new ConvolutionLayer.Builder(4,4)
                         .cudnnAlgoMode(cudnnAlgoMode).convolutionMode(ConvolutionMode.Same)
+                        .activation(Activation.LEAKYRELU)
                         .nOut(1)
-                        .build(),"lrn4"),
+                        .build(),"lrn5"),
 
                 new LayerEntry("DISLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
                         .activation(Activation.SIGMOID).build(), "conv16")
         };
     }
 
-
     public static ComputationGraph getDiscriminator() {
-        int[] imageInputShape = {1,3,256,256};
+        int[] imageInputShape = { 1, 3, 256, 256 };
+        int[] maskInputShape = { 1, 1, 256, 256 };
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
                 .weightInit(new NormalDistribution(0.0, 0.02))
@@ -222,30 +222,33 @@ public class NeuralNetwork {
                         .beta1(0.5)
                         .build())
 
-                //.l2(5 * 1e-4)
-                .miniBatch(false)
+                .l1(5 * 1e-4)
                 //.gradientNormalization(GradientNormalization.RenormalizeL2PerLayer) // normalize to prevent vanishing or exploding gradients
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
 
                 .graphBuilder()
 
-                .addInputs("Input1", "Input2")
+                .addInputs("Input1", "Input2", "Mask")
                 //rgb 256x256x3x1 + 256x256x3x1
                 .setInputTypes(InputType.convolutional(
-                        imageInputShape[2],
                         imageInputShape[3],
+                        imageInputShape[2],
                         imageInputShape[1]
                 ), InputType.convolutional(
-                        imageInputShape[2],
                         imageInputShape[3],
+                        imageInputShape[2],
                         imageInputShape[1]
+                ), InputType.convolutional(
+                        maskInputShape[3],
+                        maskInputShape[2],
+                        maskInputShape[1] //mask depth
                 ));
 
         for (int i = 0; i < discriminatorLayers().length; i++)
             if (!discriminatorLayers()[i].isVertex())
-                graphBuilder.addLayer(discriminatorLayers()[i].getLayerName(), ((LayerEntry)discriminatorLayers()[i]).getLayer(), discriminatorLayers()[i].getInputs());
+                graphBuilder.addLayer(discriminatorLayers()[i].getLayerName(), ((LayerEntry)discriminatorLayers()[i]).getLayer(), (discriminatorLayers()[i]).getInputs());
             else
-                graphBuilder.addVertex(discriminatorLayers()[i].getLayerName(), ((VertexEntry)discriminatorLayers()[i]).getVertex(), discriminatorLayers()[i].getInputs());
+                graphBuilder.addVertex(discriminatorLayers()[i].getLayerName(), ((VertexEntry)discriminatorLayers()[i]).getVertex(), (discriminatorLayers()[i]).getInputs());
 
         graphBuilder.setOutputs("DISLoss");
 
