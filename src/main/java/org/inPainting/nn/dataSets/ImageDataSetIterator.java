@@ -18,7 +18,6 @@ public abstract class ImageDataSetIterator implements MultiDataSetIterator {
 
     protected abstract INDArray convertToRank4INDArrayOutput(Image inputImage);
     protected abstract INDArray convertToRank4INDArrayInput(Image inputImage);
-    protected abstract INDArray convertToRank4INDArrayInputMask(Image inputImageMask);
 
     protected abstract MultiDataSet convertToDataSet(FileEntry fileEntry) throws IOException;
     public abstract MultiDataSet next();
@@ -32,15 +31,11 @@ public abstract class ImageDataSetIterator implements MultiDataSetIterator {
         private File input;
 
         @Getter
-        private File input_mask;
-
-        @Getter
         private File output;
 
-        public FileEntry(File input, File input_mask, File output){
+        public FileEntry(File input, File output){
             this.input = input;
             this.output = output;
-            this.input_mask = input_mask;
         }
     }
 }

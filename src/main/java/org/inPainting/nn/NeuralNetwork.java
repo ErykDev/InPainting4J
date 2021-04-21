@@ -41,8 +41,7 @@ public class NeuralNetwork {
         ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
 
         return new LEntry[]{
-                new VertexEntry("merge1", new MergeVertex(), "Input","Mask"),
-
+                new VertexEntry("merge1", new MergeVertex(), "Input"),
 
                 new LayerEntry("conv1-1", new ConvolutionLayer.Builder(3,3).stride(1,1).nOut(64)
                         .convolutionMode(ConvolutionMode.Same).cudnnAlgoMode(cudnnAlgoMode)
@@ -153,11 +152,11 @@ public class NeuralNetwork {
     }
 
     public static LEntry[] discriminatorLayers() {
-        int channels = 6+1; //two images + mask
+        int channels = 6; //two images
         ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
 
         return new LEntry[]{
-                new VertexEntry("merge2", new MergeVertex(), "Input1", "Input2", "Mask"),
+                new VertexEntry("merge2", new MergeVertex(), "Input1", "Input2"),
 
                 // #C64
                 new LayerEntry("conv11", new ConvolutionLayer.Builder(4,4).stride(2,2)
@@ -213,7 +212,6 @@ public class NeuralNetwork {
 
     public static ComputationGraph getDiscriminator() {
         int[] imageInputShape = { 1, 3, 256, 256 };
-        int[] maskInputShape = { 1, 1, 256, 256 };
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
                 .weightInit(new NormalDistribution(0.0, 0.02))
@@ -228,7 +226,7 @@ public class NeuralNetwork {
 
                 .graphBuilder()
 
-                .addInputs("Input1", "Input2", "Mask")
+                .addInputs("Input1", "Input2")
                 //rgb 256x256x3x1 + 256x256x3x1
                 .setInputTypes(InputType.convolutional(
                         imageInputShape[3],
@@ -238,10 +236,6 @@ public class NeuralNetwork {
                         imageInputShape[3],
                         imageInputShape[2],
                         imageInputShape[1]
-                ), InputType.convolutional(
-                        maskInputShape[3],
-                        maskInputShape[2],
-                        maskInputShape[1] //mask depth
                 ));
 
         for (int i = 0; i < discriminatorLayers().length; i++)

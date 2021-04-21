@@ -67,7 +67,6 @@ public final class ImageLoader {
         for (int i = 1; i < entries.length + 1; i++) {
             entries[i-1] = new ImageDataSetIterator.FileEntry(
                     new File("./data/256/inputs/input" + i + ".png"),
-                    new File("./data/256/inputs/input" + i + "_mask.png"),
                     new File("./data/256/expected/expected" + i + ".png")
             );
         }
@@ -81,7 +80,6 @@ public final class ImageLoader {
         for (int i = 1; i < entries.length + 1; i++) {
             entries[i-1] = new ImageFileDataSetIterator.FileEntry(
                     new File("./data/256/inputs/input" + i + ".png"),
-                    new File("./data/256/inputs/input" + i + "_mask.png"),
                     new File("./data/256/expected/expected" + i + ".png")
             );
         }

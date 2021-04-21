@@ -190,16 +190,12 @@ public class GAN {
                 .l2(5e-5)
                 .miniBatch(true)
                 .graphBuilder()
-                .addInputs("Input", "Mask")
+                .addInputs("Input")
                 //rgb 256x256x3x1 + m 256x256x1x1
                 .setInputTypes(InputType.convolutional(
                         _InputShape[0][3],
                         _InputShape[0][2],
                         _InputShape[0][1]
-                ),InputType.convolutional(
-                        _InputShape[1][3],
-                        _InputShape[1][2],
-                        _InputShape[1][1] //mask depth
                 ));
 
         //Generator layers
@@ -227,7 +223,7 @@ public class GAN {
         graphBuilder.addVertex(
                 DislEntry[0].getLayerName(),
                 ((VertexEntry)DislEntry[0]).getVertex(),
-                GenlEntry[GenlEntry.length - 2].getLayerName(), "Input", "Mask");
+                GenlEntry[GenlEntry.length - 2].getLayerName(), "Input");
 
         for (int i = 1; i < DislEntry.length; i++)
             graphBuilder.addLayer(

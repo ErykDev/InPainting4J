@@ -145,7 +145,6 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
                 return new MultiDataSet(
                         new INDArray[] {
                                 temp1, //Input Image
-                                temp3  //Input Mask
                         },
                         new INDArray[] {
                                 temp2 //Expected output
@@ -196,30 +195,6 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
     }
 
     @Override
-    protected INDArray convertToRank4INDArrayInputMask(Image inputImageMask) {
-
-        assert inputImageMask != null;
-        assert inputImageMask.getHeight() <= GAN._InputShape[1][2];
-        assert inputImageMask.getWidth() <= GAN._InputShape[1][3];
-
-        int width = (int) inputImageMask.getWidth();
-        int height = (int) inputImageMask.getHeight();
-
-        temp0 = Nd4j.zeros(1,1,height,width);
-        PixelReader inputPR = inputImageMask.getPixelReader();
-
-        for (int y = 0; y < height; y++)
-            for (int x = 0; x < width; x++) {
-                Color inputColor = inputPR.getColor(x, y);
-                double fBr = scaleColor(inputColor.getBrightness());
-
-                temp0.putScalar(new int[]{0,0,y,x}, fBr);
-            }
-
-        return temp0;
-    }
-
-    @Override
     protected INDArray convertToRank4INDArrayOutput(Image inputImage) {
 
         assert inputImage != null;
@@ -253,11 +228,9 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
         inputImageFileInputStream = new FileInputStream(fileEntry.getInput());
         expectedImageImageFileInputStream = new FileInputStream(fileEntry.getOutput());
-        inputImageMaskFileInputStream = new FileInputStream(fileEntry.getInput_mask());
 
         tempI0 = new Image(inputImageFileInputStream);
         tempI1 = new Image(expectedImageImageFileInputStream);
-        tempI2 = new Image(inputImageMaskFileInputStream);
 
         if (tempI0.getWidth() != tempI1.getWidth() ||
                 tempI0.getHeight() != tempI1.getHeight())
@@ -265,17 +238,14 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
         temp1 = this.convertToRank4INDArrayInput(tempI0);
         temp2 = this.convertToRank4INDArrayOutput(tempI1);
-        temp3 = this.convertToRank4INDArrayInputMask(tempI2);
 
         inputImageFileInputStream.close();
         expectedImageImageFileInputStream.close();
-        inputImageMaskFileInputStream.close();
 
 
         MultiDataSet result = new MultiDataSet(
                 new INDArray[] {
                         temp1, //Input Image
-                        temp3  //Input Mask
                 },
                 new INDArray[] {
                         temp2 //Expected output
