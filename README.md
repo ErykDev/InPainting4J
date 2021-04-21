@@ -22,11 +22,3 @@ Ready to use models:
 https://drive.google.com/drive/folders/1CXltL6oZSbfCGpEhyGv77eA0IqWQSRuD?usp=sharing
 
 to use them just put the models into project folder.
-
-Params
-
-![Input Image](https://i.ibb.co/GJtyyPV/params.png)
-
-Model 
-
-![Input Image](https://i.ibb.co/93knGNW/model.png)
