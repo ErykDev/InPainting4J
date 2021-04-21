@@ -1,11 +1,10 @@
 # InPainting4J
- Dl4J Implementation of Inpainting
+ Dl4J Implementation of Pix2Pix Gan
 
 * Project is based on [DL4J-gans](https://github.com/wmeddie/dl4j-gans)
 * UI from  [better-coding-dl4j-tutorial](https://gitlab.com/better-coding.com/public/dl4j-tutorial.git)
 
  U-Net model as generator
-
  70x70 PatchGan as discriminator (C64-C128-C256-C512)
 
 ![Input Image](https://i.ibb.co/1smh94c/input1.png)
