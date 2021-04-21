@@ -115,9 +115,8 @@ public class GAN {
                     new INDArray[] {
                             next.getFeatures()[0], //input
                             next.getFeatures()[0], //input
-                            next.getFeatures()[1] //mask
                     }, new INDArray[] {
-                    Outputs.FAKE
+                    Outputs.FAKE //zeros
             });
 
             // Fake images are marked as "0".
@@ -125,7 +124,6 @@ public class GAN {
                     new INDArray[]{
                             ganOutput[1], //gan output
                             next.getFeatures()[0], //input
-                            next.getFeatures()[1] //mask
                     },new INDArray[] {
                     Outputs.FAKE //zeros
             });
@@ -135,7 +133,6 @@ public class GAN {
                     new INDArray[]{
                             next.getLabels()[0], //expected output
                             next.getFeatures()[0], //input
-                            next.getFeatures()[1] //mask
                     },new INDArray[] {
                     Outputs.REAL //ones
             });
