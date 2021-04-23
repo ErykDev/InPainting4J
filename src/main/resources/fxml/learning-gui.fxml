@@ -21,6 +21,13 @@
         <fx:include source="custom-learning-gui.fxml" />
     </center>
     <right>
-        <CheckBox fx:id="TrainD" mnemonicParsing="false" text="TrainD" BorderPane.alignment="CENTER" />
     </right>
+    
+    <bottom>
+        <ButtonBar prefHeight="40.0" prefWidth="300.0" BorderPane.alignment="CENTER">
+            <buttons>
+                <CheckBox fx:id="TrainD" mnemonicParsing="false" prefHeight="17.0" prefWidth="125.0" text="Train Discriminator" BorderPane.alignment="CENTER" />
+            </buttons>
+        </ButtonBar>
+    </bottom>
 </BorderPane>
