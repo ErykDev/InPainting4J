@@ -9,14 +9,14 @@ import org.deeplearning4j.nn.conf.graph.MergeVertex;
 import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.*;
 import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.util.ModelSerializer;
-import org.nd4j.linalg.activations.Activation;
-import org.nd4j.linalg.activations.impl.ActivationLReLU;
-import org.nd4j.linalg.learning.config.Adam;
-import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.inPainting.nn.entry.LEntry;
 import org.inPainting.nn.entry.LayerEntry;
 import org.inPainting.nn.entry.VertexEntry;
+import org.nd4j.linalg.activations.Activation;
+import org.nd4j.linalg.learning.config.Adam;
+import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,9 +35,7 @@ public class NeuralNetwork {
         return ComputationGraph.load(file, true);
     }
 
-
     public static LEntry[] genLayers() {
-
         ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
 
         return new LEntry[]{
@@ -140,6 +138,7 @@ public class NeuralNetwork {
                 new LayerEntry("conv9-2", new ConvolutionLayer.Builder(3,3).stride(1,1).nOut(64)
                         .convolutionMode(ConvolutionMode.Same).cudnnAlgoMode(cudnnAlgoMode)
                         .activation(Activation.RELU).build(), "conv9-1"),
+
                 new LayerEntry("conv9-3", new ConvolutionLayer.Builder(3,3).stride(1,1).nOut(64)
                         .convolutionMode(ConvolutionMode.Same).cudnnAlgoMode(cudnnAlgoMode)
                         .activation(Activation.RELU).build(), "conv9-2"),
@@ -217,6 +216,8 @@ public class NeuralNetwork {
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
                 .weightInit(new NormalDistribution(0.0, 0.02))
+                //.weightInit(WeightInit.RELU)
+
                 .updater(Adam.builder()
                         .learningRate(0.0002)
                         .beta1(0.5)

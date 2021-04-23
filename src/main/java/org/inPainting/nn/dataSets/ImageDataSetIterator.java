@@ -13,6 +13,9 @@ public abstract class ImageDataSetIterator implements MultiDataSetIterator {
     @Getter
     public long maxSize;
 
+    /**
+     * @returns Random MultiDataSet from the set
+     * */
     public abstract MultiDataSet nextRandom();
     public abstract void shuffle();
 
