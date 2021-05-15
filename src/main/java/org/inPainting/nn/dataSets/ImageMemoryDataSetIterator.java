@@ -7,11 +7,11 @@ import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
-import org.inPainting.nn.GAN;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSetPreProcessor;
 import org.nd4j.linalg.factory.Nd4j;
+import org.inPainting.nn.GAN;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import java.util.Random;
 
 public final class  ImageMemoryDataSetIterator extends ImageDataSetIterator {
 
-    private Random r;
+    private Random r = new Random();
 
     private MultiDataSet[] multiDataSets;
 
@@ -32,72 +32,41 @@ public final class  ImageMemoryDataSetIterator extends ImageDataSetIterator {
 
 
     public ImageMemoryDataSetIterator(int IterationsPerPicture, MultiDataSet[] multiDataSets){
+        this(multiDataSets);
         this.iterationsPerPicture = IterationsPerPicture;
-        this.multiDataSets = multiDataSets;
-        super.maxSize = (multiDataSets.length - 1) * IterationsPerPicture;
-        this.r = new Random();
-
-        this.shuffle();
     }
 
     public ImageMemoryDataSetIterator(MultiDataSet[] multiDataSets){
         this.multiDataSets = multiDataSets;
-        super.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
-        this.r = new Random();
-
-        this.shuffle();
+        super.maxSize = (long) (multiDataSets.length - 1) * iterationsPerPicture;
     }
 
     public ImageMemoryDataSetIterator(MultiDataSet[] multiDataSets, int seed){
-        this.multiDataSets = multiDataSets;
-        super.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
+        this(multiDataSets);
         this.r = new Random(seed);
-
-        this.shuffle();
     }
 
 
     @SneakyThrows
     public ImageMemoryDataSetIterator(int IterationsPerPicture, FileEntry[] entries){
+        this(entries);
         this.iterationsPerPicture = IterationsPerPicture;
-        this.multiDataSets = new MultiDataSet[entries.length];
-
-        for (int i = 0; i < entries.length; i++) {
-            this.multiDataSets[i] = convertToDataSet(entries[i]);
-        }
-
-        super.maxSize = (multiDataSets.length - 1) * IterationsPerPicture;
-        this.r = new Random();
-
-        this.shuffle();
     }
 
     @SneakyThrows
     public ImageMemoryDataSetIterator(FileEntry[] entries){
         this.multiDataSets = new MultiDataSet[entries.length];
 
-        for (int i = 0; i < entries.length; i++) {
+        for (int i = 0; i < entries.length; i++)
             this.multiDataSets[i] = convertToDataSet(entries[i]);
-        }
 
-        super.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
-        this.r = new Random();
-
-        this.shuffle();
+        super.maxSize = (long) (multiDataSets.length - 1) * iterationsPerPicture;
     }
 
     @SneakyThrows
     public ImageMemoryDataSetIterator(FileEntry[] entries, int seed){
-        this.multiDataSets = new MultiDataSet[entries.length];
-
-        for (int i = 0; i < entries.length; i++) {
-            this.multiDataSets[i] = convertToDataSet(entries[i]);
-        }
-
-        super.maxSize = (multiDataSets.length - 1) * iterationsPerPicture;
+        this(entries);
         this.r = new Random(seed);
-
-        this.shuffle();
     }
 
     @Override
