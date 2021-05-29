@@ -7,9 +7,9 @@ import org.inPainting.utils.ImageLoader;
 
 public class NetResult {
     @Getter
-    private INDArray outputPicture;
+    private final INDArray outputPicture;
     @Getter
-    private INDArray score;
+    private final INDArray score;
 
     public NetResult(INDArray[] netOutput) {
         this.outputPicture = netOutput[1];

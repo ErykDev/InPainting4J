@@ -100,11 +100,6 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
     }
 
     @Override
-    public GAN onGetGANNetwork() {
-        return this.gan;
-    }
-
-    @Override
     public void onSetNeuralNetwork(GAN restoreMultiLayerNetwork) {
         this.gan = restoreMultiLayerNetwork;
     }

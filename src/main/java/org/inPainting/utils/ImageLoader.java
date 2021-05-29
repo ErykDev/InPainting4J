@@ -7,7 +7,6 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.inPainting.nn.dataSets.ImageDataSetIterator;
 import org.inPainting.nn.dataSets.ImageFileDataSetIterator;
 import org.inPainting.nn.dataSets.ImageMemoryDataSetIterator;
-import org.inPainting.nn.dataSets.preProcessors.GrayDataPreProcessor;
 
 import java.io.File;
 

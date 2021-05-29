@@ -51,6 +51,7 @@ public final class  ImageMemoryDataSetIterator extends ImageDataSetIterator {
     public ImageMemoryDataSetIterator(int IterationsPerPicture, FileEntry[] entries){
         this(entries);
         this.iterationsPerPicture = IterationsPerPicture;
+        super.maxSize = (long) (multiDataSets.length - 1) * iterationsPerPicture;
     }
 
     @SneakyThrows
@@ -130,7 +131,7 @@ public final class  ImageMemoryDataSetIterator extends ImageDataSetIterator {
     public MultiDataSet next() {
         if (this.hasNext()){
             pointer++;
-            return multiDataSets[(int)(pointer / iterationsPerPicture)];
+            return multiDataSets[(pointer / iterationsPerPicture)];
         } else
             return multiDataSets[multiDataSets.length - 1];
     }

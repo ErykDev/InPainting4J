@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        dl4j_use_cuda = true
+        dl4j_use_cuda = false
         dl4j_version = "1.0.0-beta7"
         springBootVersion = '2.4.1.RELEASE'
         cuda_version = "10.0"

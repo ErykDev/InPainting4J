@@ -1,6 +1,5 @@
 package org.inPainting.nn.dataSets;
 
-
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
 import javafx.scene.paint.Color;
@@ -8,7 +7,6 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
 import org.inPainting.nn.GAN;
-import org.inPainting.nn.dataSets.ImageDataSetIterator;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSetPreProcessor;
@@ -48,15 +46,11 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
 
     public ImageFileDataSetIterator(int IterationsPerPicture, FileEntry[] fileEntries, MultiDataSetPreProcessor preProcessor){
+        this(fileEntries);
+
         this.iterationsPerPicture = IterationsPerPicture;
-        this.fileEntries = fileEntries;
         super.maxSize = (long) (fileEntries.length - 1) * IterationsPerPicture;
         this.preProcessor = preProcessor;
-        this.r = new Random();
-
-        this.initFirstSet();
-
-        this.shuffle();
     }
 
     public ImageFileDataSetIterator(FileEntry[] fileEntries){
@@ -65,18 +59,12 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
         this.r = new Random();
 
         this.initFirstSet();
-
-        this.shuffle();
     }
 
     public ImageFileDataSetIterator(FileEntry[] fileEntries, int seed){
-        this.fileEntries = fileEntries;
-        super.maxSize = (long) (fileEntries.length - 1) * iterationsPerPicture;
+        this(fileEntries);
+
         this.r = new Random(seed);
-
-        this.initFirstSet();
-
-        this.shuffle();
     }
 
     @SneakyThrows
@@ -152,7 +140,7 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
                         }
                 );
             } else
-                return this.convertToDataSet(fileEntries[(int)(pointer / iterationsPerPicture)]);
+                return this.convertToDataSet(fileEntries[(pointer / iterationsPerPicture)]);
         } else
             return this.convertToDataSet(fileEntries[fileEntries.length - 1]);
     }

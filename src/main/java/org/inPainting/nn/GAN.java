@@ -27,7 +27,6 @@ public class GAN {
 
     public static final double LEARNING_RATE = 0.0002;
     public static final double LEARNING_BETA1 = 0.5;
-    public static final double LEARNING_LAMBDA = 100;
     public static final int[][] _InputShape = {
             {1,3,256,256},
             {1,1,256,256}
@@ -74,10 +73,6 @@ public class GAN {
     public GAN(ComputationGraph discriminator, ComputationGraph gan) {
         this.network = gan;
         this.discriminator = discriminator;
-    }
-
-    public WritableImage drawOutput(INDArray Picture, INDArray Mask, int width, int height) {
-        return imageLoader.drawImage(network.output(Picture, Mask)[1], width, height);
     }
 
     public NetResult getOutput(INDArray[] Picture) {
@@ -205,16 +200,16 @@ public class GAN {
         //Generator layers
         LEntry[] GenlEntry = NeuralNetwork.genLayers();
         for (LEntry lEntry : GenlEntry) {
-            if (!lEntry.isVertex())
-                graphBuilder.addLayer(
-                        lEntry.getLayerName(),
-                        ((LayerEntry) lEntry).getLayer(),
-                        lEntry.getInputs()
-                );
-            else
+            if (lEntry.isVertex())
                 graphBuilder.addVertex(
                         lEntry.getLayerName(),
                         ((VertexEntry) lEntry).getVertex(),
+                        lEntry.getInputs()
+                );
+            else
+                graphBuilder.addLayer(
+                        lEntry.getLayerName(),
+                        ((LayerEntry) lEntry).getLayer(),
                         lEntry.getInputs()
                 );
         }
