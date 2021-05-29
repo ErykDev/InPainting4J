@@ -17,6 +17,10 @@ public abstract class ImageDataSetIterator implements MultiDataSetIterator {
      * @returns Random MultiDataSet from the set
      * */
     public abstract MultiDataSet nextRandom();
+
+    /**
+     * shuffling the MultiDataSetIterator
+     * */
     public abstract void shuffle();
 
     protected abstract INDArray convertToRank4INDArrayOutput(Image inputImage);
@@ -32,13 +36,13 @@ public abstract class ImageDataSetIterator implements MultiDataSetIterator {
 
     public static class FileEntry {
         @Getter
-        private File input;
+        private final File input;
 
         @Getter
-        private File input_mask;
+        private final File input_mask;
 
         @Getter
-        private File output;
+        private final File output;
 
         public FileEntry(File input, File input_mask, File output){
             this.input = input;

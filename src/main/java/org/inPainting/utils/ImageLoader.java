@@ -15,7 +15,6 @@ public final class ImageLoader {
     private WritableImage writableTemp;
 
     public WritableImage emptyImage(Color color, int width, int height) {
-
         writableTemp = new WritableImage(width, height);
         PixelWriter pixelWriter = writableTemp.getPixelWriter();
 
@@ -44,7 +43,6 @@ public final class ImageLoader {
     }
 
     public static INDArray mergeImagesByMask(INDArray IImage, INDArray Mask, INDArray OImage, int width, int height) {
-
         INDArray indArray = OImage.dup();
 
         for (int y = 0; y < height; y++) {

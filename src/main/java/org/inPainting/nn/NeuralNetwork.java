@@ -9,7 +9,6 @@ import org.deeplearning4j.nn.conf.graph.MergeVertex;
 import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.*;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.util.ModelSerializer;
 import org.inPainting.nn.entry.LEntry;
 import org.inPainting.nn.entry.LayerEntry;
 import org.inPainting.nn.entry.VertexEntry;
@@ -17,29 +16,16 @@ import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 
-import java.io.File;
-import java.io.IOException;
-
 public class NeuralNetwork {
 
-    public static void saveNetworkGraph(ComputationGraph neuralNetwork, File file) {
-        try {
-            ModelSerializer.writeModel(neuralNetwork, file, true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static ComputationGraph loadNetworkGraph(File file) throws IOException {
-        return ComputationGraph.load(file, true);
-    }
-
+    /**
+     * @return predetermined layers of U-net Generator
+     */
     public static LEntry[] genLayers() {
         ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
 
         return new LEntry[]{
                 new VertexEntry("merge1", new MergeVertex(), "Input","Mask"),
-
 
                 new LayerEntry("conv1-1", new ConvolutionLayer.Builder(3,3).stride(1,1).nOut(64)
                         .convolutionMode(ConvolutionMode.Same).cudnnAlgoMode(cudnnAlgoMode)
@@ -150,6 +136,10 @@ public class NeuralNetwork {
         };
     }
 
+
+    /**
+     * @return predetermined layers of 70x70 PatchGan as discriminator (C64-C128-C256-C512)
+     */
     public static LEntry[] discriminatorLayers() {
         int channels = 6+1; //two images + mask
         ConvolutionLayer.AlgoMode cudnnAlgoMode = ConvolutionLayer.AlgoMode.PREFER_FASTEST;
@@ -209,9 +199,16 @@ public class NeuralNetwork {
         };
     }
 
+
+    /**
+     * Builds Discriminator network from discriminatorLayers() layers
+     * @see LEntry[] discriminatorLayers()
+     *
+     * @return Initialized Discriminator network
+     */
     public static ComputationGraph getDiscriminator() {
-        int[] imageInputShape = { 1, 3, 256, 256 };
-        int[] maskInputShape = { 1, 1, 256, 256 };
+        InputType rgbImage = InputType.convolutional(256, 256, 3);
+        InputType mask = InputType.convolutional(256, 256, 1);
 
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
                 .weightInit(new NormalDistribution(0.0, 0.02))
@@ -229,26 +226,16 @@ public class NeuralNetwork {
                 .graphBuilder()
 
                 .addInputs("Input1", "Input2", "Mask")
-                //rgb 256x256x3x1 + 256x256x3x1
-                .setInputTypes(InputType.convolutional(
-                        imageInputShape[3],
-                        imageInputShape[2],
-                        imageInputShape[1]
-                ), InputType.convolutional(
-                        imageInputShape[3],
-                        imageInputShape[2],
-                        imageInputShape[1]
-                ), InputType.convolutional(
-                        maskInputShape[3],
-                        maskInputShape[2],
-                        maskInputShape[1] //mask depth
-                ));
+                //rgb 256x256x3x1 + 256x256x3x1 + 256x256x1x1
+                .setInputTypes(rgbImage,rgbImage, mask);
 
-        for (int i = 0; i < discriminatorLayers().length; i++)
-            if (!discriminatorLayers()[i].isVertex())
-                graphBuilder.addLayer(discriminatorLayers()[i].getLayerName(), ((LayerEntry)discriminatorLayers()[i]).getLayer(), (discriminatorLayers()[i]).getInputs());
+
+        for (LEntry entry: discriminatorLayers()) {
+            if (entry.isVertex())
+                graphBuilder.addVertex(entry.getLayerName(), ((VertexEntry)entry).getVertex(), entry.getInputs());
             else
-                graphBuilder.addVertex(discriminatorLayers()[i].getLayerName(), ((VertexEntry)discriminatorLayers()[i]).getVertex(), (discriminatorLayers()[i]).getInputs());
+                graphBuilder.addLayer(entry.getLayerName(), ((LayerEntry)entry).getLayer(), entry.getInputs());
+        }
 
         graphBuilder.setOutputs("DISLoss");
 

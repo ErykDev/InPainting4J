@@ -12,20 +12,19 @@ import java.io.File;
 @Component
 public class UIServerComponent {
 
-    private UIServer uiServer;
-    private StatsStorage statsStorage;
-    private StatsListener statsListener;
+    private final UIServer uiServer;
+    private final StatsListener statsListener;
     private ComputationGraph currentNetwork;
 
     public UIServerComponent() {
-        statsStorage = new FileStatsStorage(new File("ui-stats.dat"));
+        StatsStorage statsStorage = new FileStatsStorage(new File("ui-stats.dat"));
         statsListener = new StatsListener(statsStorage);
         uiServer = UIServer.getInstance();
         uiServer.attach(statsStorage);
         uiServer.enableRemoteListener();
     }
 
-    private boolean useUI = true;
+    private final boolean useUI = true;
 
     public void reinitialize(ComputationGraph multiLayerNetwork) {
         if (useUI) {
@@ -35,14 +34,11 @@ public class UIServerComponent {
                 multiLayerNetwork.addListeners(statsListener);
 
             currentNetwork = multiLayerNetwork;
-            System.gc();
         }
     }
 
-
     public void stop() throws InterruptedException {
-        if (useUI) {
+        if (useUI)
             uiServer.stop();
-        }
     }
 }

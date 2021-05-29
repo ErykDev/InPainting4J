@@ -25,7 +25,7 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
 
     private ImageDataSetIterator trainDataSet;
 
-    private ImageLoader imageLoader = new ImageLoader();
+    private final ImageLoader imageLoader = new ImageLoader();
 
     private NetResult tempOutput;
 
@@ -63,24 +63,12 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
     @Override
     public void onInitialize() {
         //Switching to storing data in File instead of memory
-        trainDataSet = imageLoader.prepareInMemoryData();
-        log.info("Done loading train data");
+        trainDataSet = imageLoader.prepareInFileData();
+        log.info("Done loading data");
     }
 
     @Override
     public void onTrainLoop(long loopNo, boolean t) {
-        /*
-        if (loopNo % (trainDataSet.getMaxSize()*2) == 0){
-            try {
-                ModelSerializer.writeModel(gan.getDiscriminator(), new File("discriminator.zip"),true);
-                ModelSerializer.writeModel(gan.getNetwork(), new File("gan.zip"),true);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            log.info("Saving model loopNo="+loopNo);
-        }
-        */
 
         if (!trainDataSet.hasNext()) {
             log.info("Resetting ImageDataSetIterator");

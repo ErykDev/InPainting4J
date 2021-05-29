@@ -9,8 +9,10 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import lombok.SneakyThrows;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
+import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
 import org.deeplearning4j.optimize.listeners.PerformanceListener;
@@ -63,35 +65,15 @@ public class LearningGuiController {
     private CustomLearningGuiController customLearningGuiController;
 
     private final File gan_file = new File("gan.zip");
-
     private final File disc_file = new File("discriminator.zip");
 
     private GAN gan;
 
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @FXML
     private void initialize() {
-
-        if (gan_file.exists() && disc_file.exists()){
-            try {
-                gan =  new GAN(NeuralNetwork.loadNetworkGraph(disc_file), NeuralNetwork.loadNetworkGraph(gan_file));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else
-            gan = new GAN.Builder().discriminator(() -> {
-                try {
-                    log.info("Loading Discriminator");
-                    return NeuralNetwork.loadNetworkGraph(disc_file);
-                } catch (IOException e) {
-                    log.error("Error while loading discriminator network creating new one");
-                    return NeuralNetwork.getDiscriminator();
-                }
-            }).updater(Adam.builder()
-                    .learningRate(GAN.LEARNING_RATE)
-                    .beta1(GAN.LEARNING_BETA1).build())
-                    .build();
+        tryToLoadNetworks();
 
         log.info("Discriminator");
         log.info(gan.getDiscriminator().summary());
@@ -102,58 +84,50 @@ public class LearningGuiController {
         customLearningGuiController.onSetNeuralNetwork(gan);
         customLearningGuiController.onInitialize();
 
-
         uiServerComponent.reinitialize(gan.getNetwork());
-        gan.setDiscriminatorListeners(new BaseTrainingListener[]{ new PerformanceListener(20, true) });
+        gan.setDiscriminatorListeners(new PerformanceListener(100, true));
         //gan.setGanListeners(new BaseTrainingListener[]{new ScoreIterationListener(1000)});
 
-        counterProperty.addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                counterText.setText("Iteration: " + newValue);
-                counterEpoch.setText("Epoch: " + (long)((newValue.longValue()/(customLearningGuiController).getDataSize())+1));
-            }
+        counterProperty.addListener((observable, oldValue, newValue) -> {
+            counterText.setText("Iteration: " + newValue);
+            counterEpoch.setText("Epoch: " + (long)((newValue.longValue()/(customLearningGuiController).getDataSize())+1));
         });
     }
 
     public void loadAction(ActionEvent actionEvent) {
-        if (gan_file.exists() && disc_file.exists()){
-            try {
-                gan =  new GAN(NeuralNetwork.loadNetworkGraph(disc_file), NeuralNetwork.loadNetworkGraph(gan_file));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else
-            gan = new GAN.Builder().discriminator(() -> {
-                try {
-                    log.info("Loading Discriminator");
-                    return NeuralNetwork.loadNetworkGraph(disc_file);
-                } catch (IOException e) {
-                    log.error("Error while loading discriminator network creating new one");
-                    return NeuralNetwork.getDiscriminator();
-                }
-            }).updater(Adam.builder()
-                    .learningRate(GAN.LEARNING_RATE)
-                    .beta1(GAN.LEARNING_BETA1)
-                    .build())
-                    .build();
+        tryToLoadNetworks();
 
         customLearningGuiController.onSetNeuralNetwork(gan);
         customLearningGuiController.onInitialize();
 
         uiServerComponent.reinitialize(gan.getNetwork());
 
-        gan.setDiscriminatorListeners(new BaseTrainingListener[]{ new ScoreIterationListener(20) });
         showAlert(Alert.AlertType.INFORMATION, "Success", "Neural network successfully loaded");
     }
 
+    @SneakyThrows
+    private void tryToLoadNetworks(){
+        if (gan_file.exists() && disc_file.exists()){
+            gan =  new GAN(ComputationGraph.load(disc_file, true), ComputationGraph.load(gan_file, true));
+        } else
+            gan = new GAN.Builder().discriminator(() -> {
+                try {
+                    log.info("Loading Discriminator");
+                    return ComputationGraph.load(disc_file, true);
+                } catch (IOException e) {
+                    log.error("Error while loading discriminator network creating new one");
+                    return NeuralNetwork.getDiscriminator();
+                }
+            }).updater(Adam.builder()
+                    .learningRate(GAN.LEARNING_RATE)
+                    .beta1(GAN.LEARNING_BETA1).build())
+                    .build();
+    }
+
+    @SneakyThrows
     public void saveAction(ActionEvent actionEvent) {
-        NeuralNetwork.saveNetworkGraph(gan.getNetwork(), gan_file);
-        try {
-            ModelSerializer.writeModel(gan.getDiscriminator(), disc_file,true);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        ModelSerializer.writeModel(gan.getNetwork(), gan_file, true);
+        ModelSerializer.writeModel(gan.getDiscriminator(), disc_file,true);
 
         showAlert(Alert.AlertType.INFORMATION, "Success", "Neural network successfully saved");
     }
@@ -163,7 +137,7 @@ public class LearningGuiController {
         btnLoad.setDisable(trainingMode);
         btnSave.setDisable(trainingMode);
         btnTest.setDisable(trainingMode);
-        //btnTest.setDisable(trainingMode);
+
         if (btnTrain.isSelected())
             Platform.runLater(this::trainLoop);
     }
@@ -179,25 +153,23 @@ public class LearningGuiController {
 
     @Synchronized
     private void trainLoop() {
-            Task<Void> executeAppTask = new Task<Void>() {
-                @Override
-                protected Void call() {
-                    customLearningGuiController.onTrainLoop(counterProperty.get(), TrainD.isSelected());
-                    Platform.runLater(() -> counterProperty.setValue(counterProperty.get() + 1));
-                    return null;
-                }
-            };
-            executeAppTask.setOnSucceeded(e -> {
-                if (btnTrain.isSelected()) {
-                    trainLoop();
-                }
-            });
-            executeAppTask.setOnFailed(e -> {
-                Throwable problem = executeAppTask.getException();
-                log.error("learning loop error",problem);
-            });
+        Task<Void> executeAppTask = new Task<Void>() {
+            @Override
+            protected Void call() {
+                customLearningGuiController.onTrainLoop(counterProperty.get(), TrainD.isSelected());
+                Platform.runLater(() -> counterProperty.setValue(counterProperty.get() + 1));
+                return null;
+            }
+        };
+        executeAppTask.setOnSucceeded(e -> {
+            if (btnTrain.isSelected())
+                trainLoop();
+        });
+        executeAppTask.setOnFailed(e -> {
+            log.error("learning loop error", executeAppTask.getException());
+        });
 
-            executor.submit(executeAppTask);
+        executor.submit(executeAppTask);
     }
 
     private void showAlert(Alert.AlertType alertType, String title, String content) {

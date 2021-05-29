@@ -20,6 +20,7 @@ public class NetResult {
         return this.score.sumNumber().doubleValue() / this.score.length();
     }
 
+    @Deprecated
     public INDArray mergeByMask(INDArray input, INDArray mask, int width, int height){
         return ImageLoader.mergeImagesByMask(
                 input,
@@ -31,7 +32,7 @@ public class NetResult {
     }
 
     @Override
-    protected void finalize() throws Throwable {
+    protected void finalize() {
         outputPicture.close();
         score.close();
     }
