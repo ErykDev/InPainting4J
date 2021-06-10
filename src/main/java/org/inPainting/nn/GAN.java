@@ -198,18 +198,16 @@ public class GAN {
         //Generator layers
         LEntry[] GenlEntry = NeuralNetwork.genLayers();
         for (LEntry lEntry : GenlEntry) {
-            if (!lEntry.isVertex())
-                graphBuilder.addLayer(
-                        lEntry.getLayerName(),
-                        ((LayerEntry) lEntry).getLayer(),
-                        lEntry.getInputs()
-                );
-            else
+            if (lEntry.isVertex())
                 graphBuilder.addVertex(
                         lEntry.getLayerName(),
                         ((VertexEntry) lEntry).getVertex(),
-                        lEntry.getInputs()
-                );
+                        lEntry.getInputs());
+            else
+                graphBuilder.addLayer(
+                        lEntry.getLayerName(),
+                        ((LayerEntry) lEntry).getLayer(),
+                        lEntry.getInputs());
         }
 
 

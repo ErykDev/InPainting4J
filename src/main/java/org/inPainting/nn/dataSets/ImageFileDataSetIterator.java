@@ -7,13 +7,11 @@ import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
-import org.inPainting.nn.GAN;
-import org.inPainting.nn.dataSets.ImageDataSetIterator;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSetPreProcessor;
 import org.nd4j.linalg.factory.Nd4j;
-
+import org.inPainting.nn.GAN;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -21,7 +19,7 @@ import java.util.Random;
 
 public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
-    private Random r;
+    private Random r = new Random();
 
     private FileEntry[] fileEntries;
 
@@ -33,18 +31,15 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
     private int iterationsPerPicture = 20;
 
     private FileInputStream inputImageFileInputStream;
-    private FileInputStream inputImageMaskFileInputStream;
     private FileInputStream expectedImageImageFileInputStream;
 
     private INDArray temp0;
 
     private INDArray temp1;
     private INDArray temp2;
-    private INDArray temp3;
 
     private Image tempI0;
     private Image tempI1;
-    private Image tempI2;
 
 
     public ImageFileDataSetIterator(int IterationsPerPicture, FileEntry[] fileEntries, MultiDataSetPreProcessor preProcessor){
@@ -52,21 +47,15 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
         this.fileEntries = fileEntries;
         super.maxSize = (long) (fileEntries.length - 1) * IterationsPerPicture;
         this.preProcessor = preProcessor;
-        this.r = new Random();
 
         this.initFirstSet();
-
-        this.shuffle();
     }
 
     public ImageFileDataSetIterator(FileEntry[] fileEntries){
         this.fileEntries = fileEntries;
         super.maxSize = (long) (fileEntries.length - 1) * iterationsPerPicture;
-        this.r = new Random();
 
         this.initFirstSet();
-
-        this.shuffle();
     }
 
     public ImageFileDataSetIterator(FileEntry[] fileEntries, int seed){
@@ -75,8 +64,6 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
         this.r = new Random(seed);
 
         this.initFirstSet();
-
-        this.shuffle();
     }
 
     @SneakyThrows
@@ -232,6 +219,7 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
         tempI0 = new Image(inputImageFileInputStream);
         tempI1 = new Image(expectedImageImageFileInputStream);
 
+
         if (tempI0.getWidth() != tempI1.getWidth() ||
                 tempI0.getHeight() != tempI1.getHeight())
             throw new RuntimeException("Input and expected images have different sizes");
@@ -252,9 +240,9 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
                 }
         );
 
-        if (preProcessor!=null) {
+        if (preProcessor!=null)
             preProcessor.preProcess(result);
-        }
+
         return result;
     }
 }

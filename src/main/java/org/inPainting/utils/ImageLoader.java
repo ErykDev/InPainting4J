@@ -7,7 +7,6 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.inPainting.nn.dataSets.ImageDataSetIterator;
 import org.inPainting.nn.dataSets.ImageFileDataSetIterator;
 import org.inPainting.nn.dataSets.ImageMemoryDataSetIterator;
-import org.inPainting.nn.dataSets.preProcessors.GrayDataPreProcessor;
 
 import java.io.File;
 
@@ -16,7 +15,6 @@ public final class ImageLoader {
     private WritableImage writableTemp;
 
     public WritableImage emptyImage(Color color, int width, int height) {
-
         writableTemp = new WritableImage(width, height);
         PixelWriter pixelWriter = writableTemp.getPixelWriter();
 
@@ -28,7 +26,6 @@ public final class ImageLoader {
     }
 
     public WritableImage drawImage(INDArray data, int width, int height) {
-
         writableTemp = new WritableImage(width, height);
         PixelWriter pixelWriter = writableTemp.getPixelWriter();
 

@@ -220,7 +220,7 @@ public class NeuralNetwork {
                         .beta1(0.5)
                         .build())
 
-                .l1(5 * 1e-4)
+                //.l1(5 * 1e-4)
                 //.gradientNormalization(GradientNormalization.RenormalizeL2PerLayer) // normalize to prevent vanishing or exploding gradients
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
 

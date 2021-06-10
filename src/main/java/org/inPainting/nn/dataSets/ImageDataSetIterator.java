@@ -14,9 +14,22 @@ public abstract class ImageDataSetIterator implements MultiDataSetIterator {
     public long maxSize;
 
     public abstract MultiDataSet nextRandom();
+
+    /**
+     * shuffling Data in Iterator
+     */
     public abstract void shuffle();
 
+    /**
+     * @param inputImage javafx.scene.image.Image to convert
+     * @return INDArray of given Image (3 dimensions)
+     */
     protected abstract INDArray convertToRank4INDArrayOutput(Image inputImage);
+
+    /**
+     * @param inputImage javafx.scene.image.Image to convert
+     * @return INDArray of given Image (3 dimensions)
+     */
     protected abstract INDArray convertToRank4INDArrayInput(Image inputImage);
 
     protected abstract MultiDataSet convertToDataSet(FileEntry fileEntry) throws IOException;
@@ -28,10 +41,10 @@ public abstract class ImageDataSetIterator implements MultiDataSetIterator {
 
     public static class FileEntry {
         @Getter
-        private File input;
+        private final File input;
 
         @Getter
-        private File output;
+        private final File output;
 
         public FileEntry(File input, File output){
             this.input = input;

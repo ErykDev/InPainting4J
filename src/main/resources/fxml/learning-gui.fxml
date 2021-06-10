@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.inPainting.controller.LearningGuiController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.inPainting.controller.LearningGuiController">
     <top>
 
         <ButtonBar prefHeight="40.0" prefWidth="300.0" BorderPane.alignment="CENTER">
@@ -26,7 +26,7 @@
     <bottom>
         <ButtonBar prefHeight="40.0" prefWidth="300.0" BorderPane.alignment="CENTER">
             <buttons>
-                <CheckBox fx:id="TrainD" mnemonicParsing="false" prefHeight="17.0" prefWidth="125.0" text="Train Discriminator" BorderPane.alignment="CENTER" />
+                <CheckBox fx:id="TrainD" mnemonicParsing="false" prefHeight="17.0" prefWidth="125.0" selected="true" text="Train Discriminator" BorderPane.alignment="CENTER" />
             </buttons>
         </ButtonBar>
     </bottom>
