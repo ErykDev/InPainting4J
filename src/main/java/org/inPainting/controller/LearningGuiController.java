@@ -3,8 +3,6 @@ package org.inPainting.controller;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -13,16 +11,12 @@ import lombok.SneakyThrows;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
-import org.deeplearning4j.optimize.api.BaseTrainingListener;
 import org.deeplearning4j.optimize.listeners.PerformanceListener;
-import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.util.ModelSerializer;
-import org.nd4j.linalg.learning.config.Adam;
-import org.nd4j.linalg.learning.config.Sgd;
 import org.inPainting.component.UIServerComponent;
 import org.inPainting.nn.GAN;
 import org.inPainting.nn.NeuralNetwork;
+import org.nd4j.linalg.learning.config.Adam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -95,14 +89,26 @@ public class LearningGuiController {
     }
 
     public void loadAction(ActionEvent actionEvent) {
-        tryToLoadNetworks();
+        Task<Void> loadTask = new Task<Void>() {
+            @SneakyThrows
+            @Override
+            protected Void call() {
+                btnLoad.setDisable(true);
+                tryToLoadNetworks();
 
-        customLearningGuiController.onSetNeuralNetwork(gan);
-        customLearningGuiController.onInitialize();
+                customLearningGuiController.onSetNeuralNetwork(gan);
+                customLearningGuiController.onInitialize();
 
-        uiServerComponent.reinitialize(gan.getNetwork());
+                uiServerComponent.reinitialize(gan.getNetwork());
+                return null;
+            }
+        };
+        loadTask.setOnSucceeded(e -> {
+            btnLoad.setDisable(false);
+            showAlert(Alert.AlertType.INFORMATION, "Success", "Neural network successfully loaded");
+        });
 
-        showAlert(Alert.AlertType.INFORMATION, "Success", "Neural network successfully loaded");
+        executor.submit(loadTask);
     }
 
     @SneakyThrows
@@ -126,10 +132,22 @@ public class LearningGuiController {
 
     @SneakyThrows
     public void saveAction(ActionEvent actionEvent) {
-        ModelSerializer.writeModel(gan.getNetwork(), gan_file, true);
-        ModelSerializer.writeModel(gan.getDiscriminator(), disc_file,true);
+        Task<Void> saveTask = new Task<Void>() {
+            @SneakyThrows
+            @Override
+            protected Void call() {
+                btnSave.setDisable(true);
+                ModelSerializer.writeModel(gan.getNetwork(), gan_file, true);
+                ModelSerializer.writeModel(gan.getDiscriminator(), disc_file,true);
+                return null;
+            }
+        };
+        saveTask.setOnSucceeded(e -> {
+            btnSave.setDisable(false);
+            showAlert(Alert.AlertType.INFORMATION, "Success", "Neural network successfully saved");
+        });
 
-        showAlert(Alert.AlertType.INFORMATION, "Success", "Neural network successfully saved");
+        executor.submit(saveTask);
     }
 
     public void trainAction(ActionEvent actionEvent) {
@@ -143,12 +161,24 @@ public class LearningGuiController {
     }
 
     public void testAction(ActionEvent actionEvent) {
-        try {
-            customLearningGuiController.onTestAction();
-        } catch (RuntimeException e) {
-            log.error("Test execution error", e);
-            showAlert(Alert.AlertType.ERROR, "Test execution error", e.getMessage());
-        }
+        Task<Void> testTask = new Task<Void>() {
+            @SneakyThrows
+            @Override
+            protected Void call() {
+                btnTest.setDisable(true);
+                customLearningGuiController.onTestAction();
+                return null;
+            }
+        };
+
+        testTask.setOnFailed(e -> {
+            Throwable problem = testTask.getException();
+            log.error("test error", problem);
+        });
+
+        testTask.setOnSucceeded(e -> btnTest.setDisable(false));
+
+        executor.submit(testTask);
     }
 
     @Synchronized

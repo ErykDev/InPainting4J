@@ -87,7 +87,6 @@ public class GAN {
         network.setListeners(listeners);
     }
 
-
     /**
      * Fitting the discriminator if (trainDiscriminator = true)
      *
