@@ -11,6 +11,7 @@ import lombok.SneakyThrows;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.deeplearning4j.optimize.api.BaseTrainingListener;
 import org.deeplearning4j.optimize.listeners.PerformanceListener;
 import org.deeplearning4j.util.ModelSerializer;
 import org.inPainting.component.UIServerComponent;
@@ -79,7 +80,7 @@ public class LearningGuiController {
         customLearningGuiController.onInitialize();
 
         uiServerComponent.reinitialize(gan.getNetwork());
-        gan.setDiscriminatorListeners(new PerformanceListener(100, true));
+        gan.setDiscriminatorListeners(new BaseTrainingListener[]{new PerformanceListener(100, true)});
         //gan.setGanListeners(new BaseTrainingListener[]{new ScoreIterationListener(1000)});
 
         counterProperty.addListener((observable, oldValue, newValue) -> {

@@ -1,17 +1,15 @@
 package org.inPainting.nn.dataSets;
 
+
 import javafx.scene.image.Image;
-import javafx.scene.image.PixelReader;
-import javafx.scene.paint.Color;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
-import org.inPainting.nn.GAN;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSetPreProcessor;
 import org.nd4j.linalg.factory.Nd4j;
-
+import org.inPainting.nn.GAN;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -19,52 +17,45 @@ import java.util.Random;
 
 public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
-    private Random r;
+    private Random r = new Random();
 
     private FileEntry[] fileEntries;
 
     @Getter
-    private MultiDataSetPreProcessor preProcessor = null;
+    private MultiDataSetPreProcessor mPreProcessor = null;
 
     private int pointer = 0;
-
-    private int iterationsPerPicture = 20;
-
-    private FileInputStream inputImageFileInputStream;
-    private FileInputStream inputImageMaskFileInputStream;
-    private FileInputStream expectedImageImageFileInputStream;
+    private int iterationsPerPicture = 5;
 
     private INDArray temp0;
 
-    private INDArray temp1;
-    private INDArray temp2;
-    private INDArray temp3;
-
-    private Image tempI0;
-    private Image tempI1;
-    private Image tempI2;
+    private INDArray mInputTemp;
+    private INDArray mOutTemp;
+    private INDArray mMaskTemp;
 
 
     public ImageFileDataSetIterator(int IterationsPerPicture, FileEntry[] fileEntries, MultiDataSetPreProcessor preProcessor){
-        this(fileEntries);
-
         this.iterationsPerPicture = IterationsPerPicture;
+        this.fileEntries = fileEntries;
         super.maxSize = (long) (fileEntries.length - 1) * IterationsPerPicture;
-        this.preProcessor = preProcessor;
+        this.mPreProcessor = preProcessor;
+
+        this.initFirstSet();
     }
 
     public ImageFileDataSetIterator(FileEntry[] fileEntries){
         this.fileEntries = fileEntries;
         super.maxSize = (long) (fileEntries.length - 1) * iterationsPerPicture;
-        this.r = new Random();
 
         this.initFirstSet();
     }
 
     public ImageFileDataSetIterator(FileEntry[] fileEntries, int seed){
-        this(fileEntries);
-
+        this.fileEntries = fileEntries;
+        super.maxSize = (long) (fileEntries.length - 1) * iterationsPerPicture;
         this.r = new Random(seed);
+
+        this.initFirstSet();
     }
 
     @SneakyThrows
@@ -76,11 +67,17 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
     @Override
     public void setPreProcessor(MultiDataSetPreProcessor preProcessor) {
-        this.preProcessor = preProcessor;
+        this.mPreProcessor = preProcessor;
+    }
+
+    @Override
+    public MultiDataSetPreProcessor getPreProcessor() {
+        return this.mPreProcessor;
     }
 
     @SneakyThrows
     @Synchronized
+    @Override
     public MultiDataSet nextRandom(){
         return this.convertToDataSet(this.fileEntries[this.r.nextInt(this.fileEntries.length)]);
     }
@@ -132,15 +129,15 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
             if ((int)((pointer-1) / iterationsPerPicture) == (int)(pointer / iterationsPerPicture)){
                 return new MultiDataSet(
                         new INDArray[] {
-                                temp1, //Input Image
-                                temp3  //Input Mask
+                                mInputTemp, //Input Image
+                                mMaskTemp  //Input Mask
                         },
                         new INDArray[] {
-                                temp2 //Expected output
+                                mOutTemp //Expected output
                         }
                 );
             } else
-                return this.convertToDataSet(fileEntries[(pointer / iterationsPerPicture)]);
+                return this.convertToDataSet(fileEntries[(int)(pointer / iterationsPerPicture)]);
         } else
             return this.convertToDataSet(fileEntries[fileEntries.length - 1]);
     }
@@ -162,23 +159,8 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
         int height = (int) inputImage.getHeight();
 
         temp0 = Nd4j.zeros(GAN._InputShape[0][0], GAN._InputShape[0][1],height,width);
+        loadImage(inputImage, temp0);
 
-        PixelReader inputPR = inputImage.getPixelReader();
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-
-                Color inputColor = inputPR.getColor(x, y);
-
-                double fCr = scaleColor(inputColor.getRed());
-                double fCg = scaleColor(inputColor.getGreen());
-                double fCb = scaleColor(inputColor.getBlue());
-
-                temp0.putScalar(new int[]{0,0,y,x},fCr);
-                temp0.putScalar(new int[]{0,1,y,x},fCg);
-                temp0.putScalar(new int[]{0,2,y,x},fCb);
-            }
-        }
         return temp0;
     }
 
@@ -193,15 +175,7 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
         int height = (int) inputImageMask.getHeight();
 
         temp0 = Nd4j.zeros(1,1,height,width);
-        PixelReader inputPR = inputImageMask.getPixelReader();
-
-        for (int y = 0; y < height; y++)
-            for (int x = 0; x < width; x++) {
-                Color inputColor = inputPR.getColor(x, y);
-                double fBr = scaleColor(inputColor.getBrightness());
-
-                temp0.putScalar(new int[]{0,0,y,x}, fBr);
-            }
+        loadMask(inputImageMask, temp0);
 
         return temp0;
     }
@@ -216,43 +190,30 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
         int width = (int) inputImage.getWidth();
         int height = (int) inputImage.getHeight();
 
-        temp0 = Nd4j.zeros(1,3,height,width);
-        PixelReader inputPR = inputImage.getPixelReader();
+        temp0 = Nd4j.zeros(GAN._InputShape[0][0], GAN._InputShape[0][1],height,width);
+        loadImage(inputImage, temp0);
 
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                Color inputColor = inputPR.getColor(x, y);
-
-                double fCr = scaleColor(inputColor.getRed());
-                double fCg = scaleColor(inputColor.getGreen());
-                double fCb = scaleColor(inputColor.getBlue());
-
-                temp0.putScalar(new int[]{0,0,y,x},fCr);
-                temp0.putScalar(new int[]{0,1,y,x},fCg);
-                temp0.putScalar(new int[]{0,2,y,x},fCb);
-            }
-        }
         return temp0;
     }
 
     @Override
     protected MultiDataSet convertToDataSet(FileEntry fileEntry) throws IOException {
 
-        inputImageFileInputStream = new FileInputStream(fileEntry.getInput());
-        expectedImageImageFileInputStream = new FileInputStream(fileEntry.getOutput());
-        inputImageMaskFileInputStream = new FileInputStream(fileEntry.getInput_mask());
+        FileInputStream inputImageFileInputStream = new FileInputStream(fileEntry.getInput());
+        FileInputStream expectedImageImageFileInputStream = new FileInputStream(fileEntry.getOutput());
+        FileInputStream inputImageMaskFileInputStream = new FileInputStream(fileEntry.getInput_mask());
 
-        tempI0 = new Image(inputImageFileInputStream);
-        tempI1 = new Image(expectedImageImageFileInputStream);
-        tempI2 = new Image(inputImageMaskFileInputStream);
+        Image imageInput = new Image(inputImageFileInputStream);
+        Image imageOutput = new Image(expectedImageImageFileInputStream);
+        Image imageMask = new Image(inputImageMaskFileInputStream);
 
-        if (tempI0.getWidth() != tempI1.getWidth() ||
-                tempI0.getHeight() != tempI1.getHeight())
+        if (imageInput.getWidth() != imageOutput.getWidth() ||
+                imageInput.getHeight() != imageOutput.getHeight())
             throw new RuntimeException("Input and expected images have different sizes");
 
-        temp1 = this.convertToRank4INDArrayInput(tempI0);
-        temp2 = this.convertToRank4INDArrayOutput(tempI1);
-        temp3 = this.convertToRank4INDArrayInputMask(tempI2);
+        mInputTemp = this.convertToRank4INDArrayInput(imageInput);
+        mOutTemp = this.convertToRank4INDArrayOutput(imageOutput);
+        mMaskTemp = this.convertToRank4INDArrayInputMask(imageMask);
 
         inputImageFileInputStream.close();
         expectedImageImageFileInputStream.close();
@@ -261,16 +222,16 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
         MultiDataSet result = new MultiDataSet(
                 new INDArray[] {
-                        temp1, //Input Image
-                        temp3  //Input Mask
+                        mInputTemp, //Input Image
+                        mMaskTemp  //Input Mask
                 },
                 new INDArray[] {
-                        temp2 //Expected output
+                        mOutTemp //Expected output
                 }
         );
 
-        if (preProcessor!=null)
-            preProcessor.preProcess(result);
+        if (mPreProcessor !=null)
+            mPreProcessor.preProcess(result);
 
         return result;
     }

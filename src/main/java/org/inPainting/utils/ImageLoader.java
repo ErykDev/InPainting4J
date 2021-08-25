@@ -4,9 +4,7 @@ import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.inPainting.nn.dataSets.ImageDataSetIterator;
 import org.inPainting.nn.dataSets.ImageFileDataSetIterator;
-import org.inPainting.nn.dataSets.ImageMemoryDataSetIterator;
 
 import java.io.File;
 
@@ -26,7 +24,6 @@ public final class ImageLoader {
     }
 
     public WritableImage drawImage(INDArray data, int width, int height) {
-
         writableTemp = new WritableImage(width, height);
         PixelWriter pixelWriter = writableTemp.getPixelWriter();
 
@@ -57,22 +54,7 @@ public final class ImageLoader {
         return indArray;
     }
 
-    public ImageMemoryDataSetIterator prepareInMemoryData() {
-
-        ImageDataSetIterator.FileEntry[] entries = new ImageDataSetIterator.FileEntry[new File("./data/256/expected/").listFiles().length];
-
-        for (int i = 1; i < entries.length + 1; i++) {
-            entries[i-1] = new ImageDataSetIterator.FileEntry(
-                    new File("./data/256/inputs/input" + i + ".png"),
-                    new File("./data/256/inputs/input" + i + "_mask.png"),
-                    new File("./data/256/expected/expected" + i + ".png")
-            );
-        }
-        return new ImageMemoryDataSetIterator(10, entries);
-    }
-
     public ImageFileDataSetIterator prepareInFileData(){
-
         ImageFileDataSetIterator.FileEntry[] entries = new ImageFileDataSetIterator.FileEntry[new File("./data/256/expected/").listFiles().length];
 
         for (int i = 1; i < entries.length + 1; i++) {
@@ -82,6 +64,6 @@ public final class ImageLoader {
                     new File("./data/256/expected/expected" + i + ".png")
             );
         }
-        return new ImageFileDataSetIterator(10, entries, null);
+        return new ImageFileDataSetIterator(3, entries, null);
     }
 }
