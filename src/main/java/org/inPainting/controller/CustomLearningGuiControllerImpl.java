@@ -63,7 +63,7 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
     @Override
     public void onInitialize() {
         //Switching to storing data in File instead of memory
-        trainDataSet = imageLoader.prepareInMemoryData();
+        trainDataSet = imageLoader.prepareInFileData();
         log.info("Done loading train data");
     }
 

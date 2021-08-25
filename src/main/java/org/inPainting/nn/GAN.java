@@ -28,10 +28,7 @@ public class GAN {
     public static final double LEARNING_RATE = 0.0002;
     public static final double LEARNING_BETA1 = 0.5;
     public static final double LEARNING_LAMBDA = 100;
-    public static final int[][] _InputShape = {
-            {1,3,256,256},
-            {1,1,256,256}
-    };
+    public static final int[][] _InputShape = {{1,3,256,256},{1,1,256,256}};
 
 
     protected Supplier<ComputationGraph> generatorSupplier;
@@ -180,6 +177,8 @@ public class GAN {
     }
 
     public ComputationGraph NET(IUpdater updater) {
+        InputType rgbImage = InputType.convolutional(256, 256, 3);
+
         ComputationGraphConfiguration.GraphBuilder graphBuilder = new NeuralNetConfiguration.Builder()
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
                 .weightInit(WeightInit.RELU)
@@ -188,12 +187,8 @@ public class GAN {
                 .miniBatch(true)
                 .graphBuilder()
                 .addInputs("Input")
-                //rgb 256x256x3x1 + m 256x256x1x1
-                .setInputTypes(InputType.convolutional(
-                        _InputShape[0][3],
-                        _InputShape[0][2],
-                        _InputShape[0][1]
-                ));
+                //rgb 256x256x3x1
+                .setInputTypes(rgbImage);
 
         //Generator layers
         LEntry[] GenlEntry = NeuralNetwork.genLayers();
