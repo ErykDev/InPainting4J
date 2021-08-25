@@ -120,11 +120,7 @@ public class LearningGuiController {
     @SneakyThrows
     private void tryToLoadNetworks(){
         if (gan_file.exists() && disc_file.exists()){
-            try {
-                gan =  new GAN(ComputationGraph.load(disc_file, true), ComputationGraph.load(gan_file, true));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            gan = new GAN(ComputationGraph.load(disc_file, true), ComputationGraph.load(gan_file, true));
         } else
             gan = new GAN.Builder().discriminator(() -> {
                 try {
@@ -136,8 +132,7 @@ public class LearningGuiController {
                 }
             }).updater(Adam.builder()
                     .learningRate(GAN.LEARNING_RATE)
-                    .beta1(GAN.LEARNING_BETA1)
-                    .build())
+                    .beta1(GAN.LEARNING_BETA1).build())
                     .build();
     }
 
@@ -152,6 +147,7 @@ public class LearningGuiController {
                 return null;
             }
         };
+
         saveTask.setOnSucceeded(e -> {
             btnSave.setDisable(false);
             showAlert(Alert.AlertType.INFORMATION, "Success", "Neural network successfully saved");
@@ -200,11 +196,13 @@ public class LearningGuiController {
                 return null;
             }
         };
+
         executeAppTask.setOnSucceeded(e -> {
             if (btnTrain.isSelected()) {
                 trainLoop();
             }
         });
+
         executeAppTask.setOnFailed(e -> {
             Throwable problem = executeAppTask.getException();
             log.error("learning loop error",problem);

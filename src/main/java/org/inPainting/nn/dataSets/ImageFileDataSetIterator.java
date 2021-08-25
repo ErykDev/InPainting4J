@@ -200,7 +200,7 @@ public final class ImageFileDataSetIterator extends ImageDataSetIterator {
 
         MultiDataSet result = new MultiDataSet(
                 new INDArray[] {
-                        mInputTemp, //Input Image
+                        mInputTemp //Input Image
                 },
                 new INDArray[] {
                         mOutTemp //Expected output
