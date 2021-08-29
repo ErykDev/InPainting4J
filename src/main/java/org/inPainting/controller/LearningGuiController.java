@@ -11,8 +11,6 @@ import lombok.SneakyThrows;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.optimize.api.BaseTrainingListener;
-import org.deeplearning4j.optimize.listeners.PerformanceListener;
 import org.deeplearning4j.util.ModelSerializer;
 import org.inPainting.component.UIServerComponent;
 import org.inPainting.nn.GAN;
@@ -80,8 +78,6 @@ public class LearningGuiController {
         customLearningGuiController.onInitialize();
 
         uiServerComponent.reinitialize(gan.getNetwork());
-        gan.setDiscriminatorListeners(new BaseTrainingListener[]{new PerformanceListener(100, true)});
-        //gan.setGanListeners(new BaseTrainingListener[]{new ScoreIterationListener(1000)});
 
         counterProperty.addListener((observable, oldValue, newValue) -> {
             counterText.setText("Iteration: " + newValue);
@@ -104,6 +100,7 @@ public class LearningGuiController {
                 return null;
             }
         };
+
         loadTask.setOnSucceeded(e -> {
             btnLoad.setDisable(false);
             showAlert(Alert.AlertType.INFORMATION, "Success", "Neural network successfully loaded");
@@ -143,6 +140,7 @@ public class LearningGuiController {
                 return null;
             }
         };
+
         saveTask.setOnSucceeded(e -> {
             btnSave.setDisable(false);
             showAlert(Alert.AlertType.INFORMATION, "Success", "Neural network successfully saved");
@@ -187,15 +185,17 @@ public class LearningGuiController {
         Task<Void> executeAppTask = new Task<Void>() {
             @Override
             protected Void call() {
-                customLearningGuiController.onTrainLoop(counterProperty.get(), TrainD.isSelected());
+                customLearningGuiController.onTrainLoop(counterProperty.get(), 3,TrainD.isSelected());
                 Platform.runLater(() -> counterProperty.setValue(counterProperty.get() + 1));
                 return null;
             }
         };
+
         executeAppTask.setOnSucceeded(e -> {
             if (btnTrain.isSelected())
                 trainLoop();
         });
+
         executeAppTask.setOnFailed(e -> {
             log.error("learning loop error", executeAppTask.getException());
         });

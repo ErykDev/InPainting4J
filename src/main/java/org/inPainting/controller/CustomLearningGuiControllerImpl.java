@@ -66,18 +66,17 @@ public class CustomLearningGuiControllerImpl implements CustomLearningGuiControl
     }
 
     @Override
-    public void onTrainLoop(long loopNo, boolean t) {
-
+    public void onTrainLoop(long iteration, int discriminatorFitPause, boolean discriminatorFit) {
         if (!trainDataSet.hasNext()) {
             log.info("Resetting ImageDataSetIterator");
             trainDataSet.reset();
             System.gc();
         }
 
-        if (loopNo % 4 == 0)
-            gan.fit(trainDataSet.next(), t);
+        if (iteration % discriminatorFitPause == 0)
+            gan.fit(trainDataSet.next(), iteration, discriminatorFit);
         else
-            gan.fit(trainDataSet.next(), false);
+            gan.fit(trainDataSet.next(), iteration, false);
     }
 
     @Override

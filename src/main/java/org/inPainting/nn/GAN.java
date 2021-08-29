@@ -2,6 +2,7 @@ package org.inPainting.nn;
 
 import javafx.scene.image.WritableImage;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.*;
 import org.deeplearning4j.nn.conf.inputs.InputType;
@@ -21,8 +22,11 @@ import org.inPainting.nn.entry.LayerEntry;
 import org.inPainting.nn.entry.VertexEntry;
 import org.inPainting.nn.res.NetResult;
 
+import java.text.DecimalFormat;
+import java.text.MessageFormat;
 import java.util.function.Supplier;
 
+@Slf4j
 public class GAN {
 
     public static final double LEARNING_RATE = 0.0002;
@@ -49,6 +53,7 @@ public class GAN {
     protected long seed;
     protected ImageLoader imageLoader = new ImageLoader();
 
+    private final DecimalFormat df = new DecimalFormat("######.#####");
 
 
     public GAN(Builder builder) {
@@ -92,17 +97,9 @@ public class GAN {
         network.setListeners(listeners);
     }
 
-    public void fit(MultiDataSetIterator realData, int numEpochs) {
-        for (int i = 0; i < numEpochs; i++) {
-            while (realData.hasNext()) {
-                MultiDataSet next = (MultiDataSet) realData.next();
-                fit(next,true);
-            }
-            realData.reset();
-        }
-    }
+    public void fit(MultiDataSet next, long iter, boolean trainDiscriminator) {
+        long startTime = System.currentTimeMillis();
 
-    public void fit(MultiDataSet next, boolean trainDiscriminator) {
         if (trainDiscriminator) {
             INDArray[] ganOutput = network.output(next.getFeatures());
 
@@ -159,6 +156,11 @@ public class GAN {
                         next.getLabels()[0]
                 })
         );
+
+        long endTime = System.currentTimeMillis();
+        long diffSeconds = (endTime - startTime) / 1000;
+
+        log.info(MessageFormat.format("Iter {0}; Time {1} sec; GAN Score {2}; Discriminator Score {3};", iter, diffSeconds, df.format(network.score()), df.format(discriminator.score())));
     }
 
     private void defineGan() {
