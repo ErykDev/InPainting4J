@@ -64,6 +64,6 @@ public final class ImageLoader {
                     new File("./data/256/expected/expected" + i + ".png")
             );
         }
-        return new ImageFileDataSetIterator(5, entries, null);
+        return new ImageFileDataSetIterator(3, entries, null);
     }
 }

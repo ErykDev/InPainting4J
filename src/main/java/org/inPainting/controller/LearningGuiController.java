@@ -191,7 +191,7 @@ public class LearningGuiController {
         Task<Void> executeAppTask = new Task<Void>() {
             @Override
             protected Void call() {
-                customLearningGuiController.onTrainLoop(counterProperty.get(), TrainD.isSelected());
+                customLearningGuiController.onTrainLoop(counterProperty.get(), 3,TrainD.isSelected());
                 Platform.runLater(() -> counterProperty.setValue(counterProperty.get() + 1));
                 return null;
             }

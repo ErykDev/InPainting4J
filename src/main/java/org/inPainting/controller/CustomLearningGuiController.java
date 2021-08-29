@@ -7,7 +7,7 @@ public interface CustomLearningGuiController {
 
     void onInitialize();
 
-    void onTrainLoop(long loopNo,boolean trainD);
+    void onTrainLoop(long iteration, int discriminatorFitPause, boolean discriminatorFit);
 
     void onTestAction();
 
