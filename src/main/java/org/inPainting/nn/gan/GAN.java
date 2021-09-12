@@ -57,9 +57,8 @@ public class GAN {
     protected long seed;
     protected ImageLoader imageLoader = new ImageLoader();
 
-    private final DecimalFormat df = new DecimalFormat("########.#####");
-
-
+    private final DecimalFormat sf = new DecimalFormat("########.#####");
+    private final DecimalFormat tf = new DecimalFormat("####.####");
 
     public GAN(Builder builder) {
         this.generatorSupplier = builder.generator;
@@ -163,9 +162,9 @@ public class GAN {
         );
 
         long endTime = System.currentTimeMillis();
-        long diffSeconds = (endTime - startTime) / 1000;
+        double diffSeconds = (endTime - startTime) / 1000.0;
 
-        log.info(MessageFormat.format("Iter {0}; Time {1} sec; GAN Score {2}; Discriminator Score {3};", iter, diffSeconds, df.format(network.score()), df.format(discriminator.score())));
+        log.info(MessageFormat.format("Iter {0}; Time {1} sec; GAN Score {2}; Discriminator Score {3};", iter+1, tf.format(diffSeconds), sf.format(network.score()), sf.format(discriminator.score())));
     }
 
     private void defineGan() {
