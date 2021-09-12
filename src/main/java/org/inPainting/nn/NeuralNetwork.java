@@ -167,7 +167,7 @@ public class NeuralNetwork {
                         .nOut(1)
                         .build(),"lrn5"),
 
-                new LayerEntry("DISLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
+                new LayerEntry("DISCNNLoss", new CnnLossLayer.Builder(LossFunctions.LossFunction.XENT)
                         .activation(Activation.SIGMOID).build(), "conv16")
         };
     }
@@ -201,7 +201,7 @@ public class NeuralNetwork {
                 graphBuilder.addLayer(entry.getLayerName(), ((LayerEntry)entry).getLayer(), entry.getInputs());
         }
 
-        graphBuilder.setOutputs("DISLoss");
+        graphBuilder.setOutputs("DISCNNLoss");
 
         return new ComputationGraph(graphBuilder.build());
     }

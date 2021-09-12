@@ -3,8 +3,6 @@ package org.inPainting.controller;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -13,15 +11,13 @@ import lombok.SneakyThrows;
 import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
 import org.deeplearning4j.optimize.listeners.PerformanceListener;
-import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.deeplearning4j.util.ModelSerializer;
+import org.inPainting.gan.GanComputationGraph;
 import org.nd4j.linalg.learning.config.Adam;
-import org.nd4j.linalg.learning.config.Sgd;
 import org.inPainting.component.UIServerComponent;
-import org.inPainting.nn.GAN;
+import org.inPainting.gan.GAN;
 import org.inPainting.nn.NeuralNetwork;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -120,7 +116,7 @@ public class LearningGuiController {
     @SneakyThrows
     private void tryToLoadNetworks(){
         if (gan_file.exists() && disc_file.exists()){
-            gan = new GAN(ComputationGraph.load(disc_file, true), ComputationGraph.load(gan_file, true));
+            gan = new GAN(ComputationGraph.load(disc_file, true), GanComputationGraph.load(gan_file, true));
         } else
             gan = new GAN.Builder().discriminator(() -> {
                 try {

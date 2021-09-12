@@ -1,4 +1,4 @@
-package org.inPainting.nn;
+package org.inPainting.gan;
 
 import javafx.scene.image.WritableImage;
 import lombok.Getter;
@@ -6,9 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.*;
 import org.deeplearning4j.nn.conf.inputs.InputType;
+import org.deeplearning4j.nn.conf.layers.BatchNormalization;
+import org.deeplearning4j.nn.conf.layers.misc.FrozenLayerWithBackprop;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
+import org.inPainting.nn.NeuralNetwork;
 import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
@@ -216,15 +219,23 @@ public class GAN {
                 GenlEntry[GenlEntry.length - 2].getLayerName(), "Input");
 
         for (int i = 1; i < DislEntry.length; i++)
-            graphBuilder.addLayer(
-                    DislEntry[i].getLayerName(),
-                    ((LayerEntry) DislEntry[i]).getLayer(),
-                    DislEntry[i].getInputs()
-            );
 
-        graphBuilder.setOutputs("DISLoss","GENCNNLoss"); //Discriminator output, Generator loss
+            if (((LayerEntry) DislEntry[i]).getLayer() instanceof BatchNormalization) //FrozenLayerWithBackprop don't work with BatchNormalization
+                graphBuilder.addLayer(
+                        DislEntry[i].getLayerName(),
+                        ((LayerEntry) DislEntry[i]).getLayer(),
+                        DislEntry[i].getInputs()
+                );
+            else
+                graphBuilder.addLayer(
+                        DislEntry[i].getLayerName(),
+                        new FrozenLayerWithBackprop(((LayerEntry) DislEntry[i]).getLayer()),
+                        DislEntry[i].getInputs()
+                );
 
-        return new ComputationGraph(graphBuilder.build());
+        graphBuilder.setOutputs("DISCNNLoss","GENCNNLoss"); //Discriminator output, Generator loss
+
+        return new GanComputationGraph(graphBuilder.build());
     }
 
     /**
