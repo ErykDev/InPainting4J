@@ -9,7 +9,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.dataset.api.MultiDataSetPreProcessor;
 import org.nd4j.linalg.factory.Nd4j;
-import org.inPainting.nn.GAN;
+import org.inPainting.nn.gan.GAN;
 
 import java.io.FileInputStream;
 import java.io.IOException;

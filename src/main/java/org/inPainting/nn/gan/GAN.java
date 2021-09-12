@@ -1,4 +1,4 @@
-package org.inPainting.nn;
+package org.inPainting.nn.gan;
 
 import javafx.scene.image.WritableImage;
 import lombok.Getter;
@@ -6,9 +6,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.*;
 import org.deeplearning4j.nn.conf.inputs.InputType;
+import org.deeplearning4j.nn.conf.layers.BatchNormalization;
+import org.deeplearning4j.nn.conf.layers.misc.FrozenLayerWithBackprop;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.api.BaseTrainingListener;
+import org.inPainting.nn.NeuralNetwork;
+import org.inPainting.nn.entry.LEntry;
+import org.inPainting.nn.entry.LayerEntry;
+import org.inPainting.nn.entry.VertexEntry;
+import org.inPainting.nn.res.NetResult;
 import org.inPainting.utils.ImageLoader;
 import org.nd4j.evaluation.classification.Evaluation;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -17,13 +24,10 @@ import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.learning.config.Sgd;
-import org.inPainting.nn.entry.LEntry;
-import org.inPainting.nn.entry.LayerEntry;
-import org.inPainting.nn.entry.VertexEntry;
-import org.inPainting.nn.res.NetResult;
 
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
+
 import java.util.function.Supplier;
 
 @Slf4j
@@ -53,7 +57,8 @@ public class GAN {
     protected long seed;
     protected ImageLoader imageLoader = new ImageLoader();
 
-    private final DecimalFormat df = new DecimalFormat("######.#####");
+    private final DecimalFormat df = new DecimalFormat("########.#####");
+
 
 
     public GAN(Builder builder) {
@@ -185,8 +190,6 @@ public class GAN {
                 .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
                 .weightInit(WeightInit.RELU)
                 .updater(updater)
-                //.l2(5e-5)
-                .miniBatch(true)
                 .graphBuilder()
                 .addInputs("Input", "Mask")
                 //rgb 256x256x3x1 + m 256x256x1x1
@@ -218,15 +221,23 @@ public class GAN {
                 GenlEntry[GenlEntry.length - 2].getLayerName(), "Input", "Mask");
 
         for (int i = 1; i < DislEntry.length; i++)
-            graphBuilder.addLayer(
-                    DislEntry[i].getLayerName(),
-                    ((LayerEntry) DislEntry[i]).getLayer(),
-                    DislEntry[i].getInputs()
-            );
 
-        graphBuilder.setOutputs("DISLoss","GENCNNLoss"); //Discriminator output, Generator loss
+            if (((LayerEntry) DislEntry[i]).getLayer() instanceof BatchNormalization) //FrozenLayerWithBackprop don't work with BatchNormalization
+                graphBuilder.addLayer(
+                        DislEntry[i].getLayerName(),
+                        ((LayerEntry) DislEntry[i]).getLayer(),
+                        DislEntry[i].getInputs()
+                );
+            else
+                graphBuilder.addLayer(
+                        DislEntry[i].getLayerName(),
+                        new FrozenLayerWithBackprop(((LayerEntry) DislEntry[i]).getLayer()),
+                        DislEntry[i].getInputs()
+                );
 
-        return new ComputationGraph(graphBuilder.build());
+        graphBuilder.setOutputs("DISCNNLoss","GENCNNLoss"); //Discriminator output, Generator loss
+
+        return new GanComputationGraph(graphBuilder.build());
     }
 
     /**

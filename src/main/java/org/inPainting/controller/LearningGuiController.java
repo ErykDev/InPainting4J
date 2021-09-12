@@ -13,8 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.util.ModelSerializer;
 import org.inPainting.component.UIServerComponent;
-import org.inPainting.nn.GAN;
+import org.inPainting.nn.gan.GAN;
 import org.inPainting.nn.NeuralNetwork;
+import org.inPainting.nn.gan.GanComputationGraph;
 import org.nd4j.linalg.learning.config.Adam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -112,7 +113,7 @@ public class LearningGuiController {
     @SneakyThrows
     private void tryToLoadNetworks(){
         if (gan_file.exists() && disc_file.exists()){
-            gan =  new GAN(ComputationGraph.load(disc_file, true), ComputationGraph.load(gan_file, true));
+            gan =  new GAN(ComputationGraph.load(disc_file, true), GanComputationGraph.load(gan_file, true));
         } else
             gan = new GAN.Builder().discriminator(() -> {
                 try {

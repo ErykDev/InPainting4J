@@ -6,7 +6,7 @@ import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.inPainting.nn.dataSets.ImageDataSetIterator;
-import org.inPainting.nn.GAN;
+import org.inPainting.nn.gan.GAN;
 import org.inPainting.nn.res.NetResult;
 import org.inPainting.utils.ImageLoader;
 import org.springframework.stereotype.Component;

@@ -1,6 +1,6 @@
 package org.inPainting.controller;
 
-import org.inPainting.nn.GAN;
+import org.inPainting.nn.gan.GAN;
 
 public interface CustomLearningGuiController {
 
